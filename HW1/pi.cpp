@@ -10,7 +10,21 @@ long long int num_tosses = 0;
 
 long long int* each_in_circle;
 
-void* monte_carlo_runner(void* args)
+inline int fast_rand()
+{
+    int g_seed = time(NULL);
+    g_seed = (214013 * g_seed + 2531011);
+    return (g_seed >> 16) & 0x7FFF;
+}
+inline int fast_rand2(int low, int high)
+{
+    // std::default_random_engine rd;
+    // std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dis(low, high);
+
+    return dis(gen);
+}
+inline void* monte_carlo_runner(void* args)
 {
     long cur_thread = (long) args;
     //printf("cur thread %d \n", cur_thread);
@@ -22,11 +36,13 @@ void* monte_carlo_runner(void* args)
     
     for (register long long int i = 0; i < num_tosses / cpu_cores; i++)
     {
-        // x = rand() / ((float)RAND_MAX);
-        // y = rand() / ((float)RAND_MAX);
-        x = rand_r(&seed) / ((float)RAND_MAX); //thread-safe random number generator
-        y = rand_r(&seed) / ((float)RAND_MAX); //thread-safe random number generator
-        //printf("x=[%f] y=[%f] \n", x, y);
+        // x = rand_r(&seed) / ((float)RAND_MAX); //thread-safe random number generator
+        // y = rand_r(&seed) / ((float)RAND_MAX); //thread-safe random number generator
+
+        x = fast_rand2(-1, 1) / (float) 1.0;
+        y = fast_rand2(-1, 1) / (float) 1.0;
+
+        // printf("x=[%f] y=[%f] \n", x, y);
         if (x * x + y * y <= 1)
         {
             in_circle++;
