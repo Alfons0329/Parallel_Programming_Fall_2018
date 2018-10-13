@@ -8,8 +8,11 @@ using namespace std;
 int cpu_cores = 0;
 long long int num_tosses = 0;
 
-inline void multi_thread_monte_carlo()
+long long int* each_in_circle;
+
+void* monte_carlo_runner(void* args)
 {
+
 }
 
 inline void single_thread_monte_carlo()
@@ -51,5 +54,18 @@ int main(int argc, char *argv[])
     int usec = abs(end.tv_usec - start.tv_usec);
     printf("single thread elapsed time %f ms \n", sec * 1000.0f + usec / 1000.0f);
     //--------------------------multi thread monte carlo-----------------------//
+    
+    each_in_circle = new long long int[cpu_cores]; //stores the in_circle count of each thread
+    pthread_t thread_id[cpu_cores];
+
+    for (int i = 0; i < cpu_cores; i++)
+    {
+        pthread_create(&thread_id[i], NULL, monte_carlo_runner, (void *) i);
+    }
+    for (int i = 0; i < cpu_cores; i++)
+    {
+        pthread_join(thread_id[i], NULL);
+    }
+
     return 0;
 }
