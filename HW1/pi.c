@@ -1,29 +1,31 @@
-#include <bits/stdc++.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <sys/time.h>
 #include <unistd.h>
 #include <time.h>
 #include <pthread.h>
 
-using namespace std;
-int cpu_cores = 0;
-long long int num_tosses = 0;
+int cpu_cores=0;
+long long int num_tosses=0;
 
-inline void multi_thread_monte_carlo()
+void multi_thread_monte_carlo()
 {
+
+
 }
 
-inline void single_thread_monte_carlo()
+void single_thread_monte_carlo()
 {
     float x = 0.0f, y = 0.0f;
     float pi_estimated = 0.0f;
-    long long int in_circle = 0;
+    long long int in_circle=0;
 
-    for (register long long int i = 0; i < num_tosses; i++)
+    for(register long long int i = 0; i < num_tosses; i++)
     {
         x = rand() / ((float)RAND_MAX);
         y = rand() / ((float)RAND_MAX);
         //printf("x=[%f] y=[%f] \n", x, y);
-        if (x * x + y * y <= 1)
+        if( x*x + y*y <=1 )
         {
             in_circle++;
         }
@@ -33,10 +35,11 @@ inline void single_thread_monte_carlo()
     printf("Pi: %f\n", pi_estimated);
 }
 
-int main(int argc, char *argv[])
+
+int main(int argc, char* argv[])
 {
-    cpu_cores = atoi(argv[1]);
-    num_tosses = atoll(argv[2]);
+    cpu_cores=atoi(argv[1]);
+    num_tosses=atoll(argv[2]);
     printf("cpu cores %d, num_tosses %lld \n", cpu_cores, num_tosses);
     srand(time(NULL));
 
