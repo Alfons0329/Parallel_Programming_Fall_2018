@@ -16,14 +16,16 @@ inline int fast_rand()
     g_seed = (214013 * g_seed + 2531011);
     return (g_seed >> 16) & 0x7FFF;
 }
+
 inline int fast_rand2(int low, int high)
 {
-    // std::default_random_engine rd;
-    // std::mt19937 gen(rd());
+    std::default_random_engine rd;
+    std::mt19937 gen(rd());
     std::uniform_int_distribution<> dis(low, high);
 
     return dis(gen);
 }
+
 inline void* monte_carlo_runner(void* args)
 {
     long cur_thread = (long) args;
@@ -33,14 +35,15 @@ inline void* monte_carlo_runner(void* args)
     float pi_estimated = 0.0f;
     long long int in_circle = 0;
     unsigned int seed = time(NULL);
-    
-    for (register long long int i = 0; i < num_tosses / cpu_cores; i++)
-    {
-        // x = rand_r(&seed) / ((float)RAND_MAX); //thread-safe random number generator
-        // y = rand_r(&seed) / ((float)RAND_MAX); //thread-safe random number generator
 
-        x = fast_rand2(-1, 1) / (float) 1.0;
-        y = fast_rand2(-1, 1) / (float) 1.0;
+    for (register long long int i = num_tosses / cpu_cores; i >= 0; i--)
+    // for (register long long int i = 0; i < num_tosses / cpu_cores; i++)
+    {
+        x = rand_r(&seed) / ((float)RAND_MAX); //thread-safe random number generator
+        y = rand_r(&seed) / ((float)RAND_MAX); //thread-safe random number generator
+
+        // x = fast_rand2(-1, 1) / (float) 1.0;
+        // y = fast_rand2(-1, 1) / (float) 1.0;
 
         // printf("x=[%f] y=[%f] \n", x, y);
         if (x * x + y * y <= 1)
@@ -96,13 +99,13 @@ int main(int argc, char *argv[])
     each_in_circle = new long long int[cpu_cores]; //stores the in_circle count of each thread
     pthread_t thread_id[cpu_cores];
 
-    for (int i = 0; i < cpu_cores; i++) //i is the current thread
+    for (long i = 0; i < cpu_cores; i++) //i is the current thread
     {
         pthread_create(&thread_id[i], NULL, monte_carlo_runner, (void *) i);
     }
 
     gettimeofday(&start, 0);
-    for (int i = 0; i < cpu_cores; i++)
+    for (long i = 0; i < cpu_cores; i++)
     {
         pthread_join(thread_id[i], NULL);
     }
