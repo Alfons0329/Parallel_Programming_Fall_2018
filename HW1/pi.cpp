@@ -6,9 +6,12 @@
 
 using namespace std;
 int cpu_cores = 0;
-long long int num_tosses = 0;
 
+long long int num_tosses = 0;
 long long int* each_in_circle;
+
+pthread_mutex_t mutex1 = PTHREAD_MUTEX_INITIALIZER;
+long long int total_in_circle; //mutex version
 
 inline int fast_rand()
 {
@@ -51,8 +54,10 @@ inline void* monte_carlo_runner(void* args)
             in_circle++;
         }
     }
-
-    each_in_circle[cur_thread] = in_circle;
+    pthread_mutex_lock(&mutex1); 
+    //each_in_circle[cur_thread] = in_circle; non-mutex version
+    total_in_circle+=in_circle;//mutex version
+    pthread_mutex_unlock(&mutex1);
     pthread_exit(EXIT_SUCCESS);
 }
 
@@ -95,7 +100,7 @@ int main(int argc, char *argv[])
     int usec = abs(end.tv_usec - start.tv_usec);
     printf("single thread elapsed time %f ms \n", sec * 1000.0f + usec / 1000.0f);
     //--------------------------multi thread monte carlo-----------------------//
-    
+    total_in_circle = 0;
     each_in_circle = new long long int[cpu_cores]; //stores the in_circle count of each thread
     pthread_t thread_id[cpu_cores];
 
@@ -116,7 +121,8 @@ int main(int argc, char *argv[])
         sum += each_in_circle[i];
     }
     gettimeofday(&end, 0);
-    float pi_estimated = 4 * sum / ((float)num_tosses);
+    //float pi_estimated = 4 * sum / ((float)num_tosses);
+    float pi_estimated = 4 * total_in_circle / ((float)num_tosses);
     
     sec = abs(end.tv_sec - start.tv_sec);
     usec = abs(end.tv_usec - start.tv_usec);
