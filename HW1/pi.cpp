@@ -49,7 +49,7 @@ inline void* monte_carlo_runner(void* args)
         // y = fast_rand2(-1, 1) / (float) 1.0;
 
         // printf("x=[%f] y=[%f] \n", x, y);
-        if (x * x + y * y <= 1)
+        if (x * x + y * y <= 1.0f)
         {
             in_circle++;
         }
