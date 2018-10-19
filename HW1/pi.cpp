@@ -36,7 +36,6 @@ inline int fast_rand2(int low, int high)
 inline void* monte_carlo_runner(void* args)
 {
     long cur_thread = (long) args;
-    //printf("cur thread %d \n", cur_thread);
    
     float x = 0.0f, y = 0.0f;
     float pi_estimated = 0.0f;

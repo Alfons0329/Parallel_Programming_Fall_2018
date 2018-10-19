@@ -1,6 +1,6 @@
 TARGET=pi_out.o
-CPP=gcc
-CPP_FLAGS=-std=c11 -O2
+CC=gcc
+C_FLAGS=-std=c11 -O2
 SOURCE=pi.c
 
 LIBS=-lm -pthread
@@ -11,7 +11,7 @@ CPP_FLAGS2=-std=c++11 -O2
 SOURCE2=pi.cpp
 
 all: pi.c pi.cpp
-	$(CPP) $(SOURCE) -o $(TARGET) $(CPP_FLAGS) $(LIBS)
+	$(CC) $(SOURCE) -o $(TARGET) $(C_FLAGS) $(LIBS)
 	$(CPP2) $(SOURCE2) -o $(TARGET2) $(CPP_FLAGS2)  $(LIBS)
 
 .PHONY: clean
