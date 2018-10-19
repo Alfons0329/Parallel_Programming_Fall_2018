@@ -1,4 +1,8 @@
-#include <bits/stdc++.h>
+//#include <bits/stdc++.h>
+//#include <sys/random.h>
+#include <iostream>
+#include <stdlib.h>
+#include <stdio.h>
 #include <sys/time.h>
 #include <unistd.h>
 #include <time.h>
@@ -13,7 +17,7 @@ long long int* each_in_circle;
 pthread_mutex_t mutex1 = PTHREAD_MUTEX_INITIALIZER;
 long long int total_in_circle; //mutex version
 
-inline int fast_rand()
+/*inline int fast_rand()
 {
     int g_seed = time(NULL);
     g_seed = (214013 * g_seed + 2531011);
@@ -27,7 +31,7 @@ inline int fast_rand2(int low, int high)
     std::uniform_int_distribution<> dis(low, high);
 
     return dis(gen);
-}
+}*/
 
 inline void* monte_carlo_runner(void* args)
 {
