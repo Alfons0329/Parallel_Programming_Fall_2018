@@ -1,7 +1,3 @@
-// Student ID:
-// Name      :
-// Date      : 2017.11.03
-
 #include "bmpReader.h"
 #include "bmpReader.cpp"
 #include  <stdio.h>
@@ -14,7 +10,7 @@ using namespace std;
 #define MYRED	2
 #define MYGREEN 1
 #define MYBLUE	0
-
+#define RATE 1000000
 int img_width, img_height;
 
 int FILTER_SIZE;
@@ -37,15 +33,6 @@ const char *outputBlur_name[5] =
 	"Blur4.bmp",
 	"Blur5.bmp"
 };
-/*
-const char *outputSobel_name[5] = {
-	"Sobel1.bmp",
-	"Sobel2.bmp",
-	"Sobel3.bmp",
-	"Sobel4.bmp",
-	"Sobel5.bmp"
-};*/
-
 unsigned char *pic_in, *pic_grey, *pic_blur, *pic_out;
 
 unsigned char gaussian_filter(int w, int h,int shift)
@@ -101,18 +88,18 @@ int main()
 	FILTER_SCALE = 0.0f; //recalculate
 	for (int i = 0; i < FILTER_SIZE; i++)
 	{
-		filter_G[i] *= 1000000;
+		filter_G[i] *= RATE;
 		FILTER_SCALE += filter_G[i];	
 	}
 	printf("filter scale [%f] \n", FILTER_SCALE);
 	fclose(mask);
-
 
 	BmpReader* bmpReader = new BmpReader();
 	for (int k = 0; k  <  5; k++)
 	{
 		// read input BMP file
 		pic_in = bmpReader -> ReadBMP(inputfile_name[k], &img_width, &img_height);
+
 		// allocate space for output image
 		pic_out = (unsigned char*)malloc(3 * img_width * img_height * sizeof(unsigned char));
 
