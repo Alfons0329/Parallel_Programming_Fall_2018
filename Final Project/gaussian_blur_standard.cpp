@@ -73,7 +73,7 @@ unsigned char gaussian_filter(int w, int h,int shift)
 
 	tmp /= FILTER_SCALE;
 
-	if (tmp  <  0)
+	if (tmp < 0)
 	{
 		tmp = 0;
 	} 
@@ -122,23 +122,6 @@ int main()
 		{
 			for (int i = 0; i < img_width; i++)
 			{
-				int getval_r = gaussian_filter(i, j, MYRED);
-				int getval_g = gaussian_filter(i, j, MYGREEN);
-				int getval_b = gaussian_filter(i, j, MYBLUE);
-				// printf("oR %d oG %d oB %d cR %d cG %d cB %d \n"
-				// , pic_in[3 * (j * img_width + i) + MYRED]
-				// , pic_in[3 * (j * img_width + i) + MYGREEN]
-				// , pic_in[3 * (j * img_width + i) + MYBLUE]
-				// , getval_r
-				// , getval_g
-				// , getval_b
-				// );
-				// if ( pic_in[3 * (j * img_width + i) + MYRED] != getval_r 
-				// && pic_in[3 * (j * img_width + i) + MYGREEN] != getval_g
-				// && pic_in[3 * (j * img_width + i) + MYBLUE] != getval_b)
-				// {
-				// 	printf("diffcnt %d\n", ++cnt);
-				// }
 				pic_out[3 * (j * img_width + i) + MYRED] = gaussian_filter(i, j, MYRED);
 				pic_out[3 * (j * img_width + i) + MYGREEN] = gaussian_filter(i, j, MYGREEN);
 				pic_out[3 * (j * img_width + i) + MYBLUE] = gaussian_filter(i, j, MYBLUE);
