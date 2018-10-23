@@ -18,8 +18,8 @@ using namespace std;
 int img_width, img_height;
 
 int FILTER_SIZE;
-int FILTER_SCALE;
-int *filter_G;
+float FILTER_SCALE;
+float *filter_G;
 
 const char *inputfile_name[5] = 
 {
@@ -67,7 +67,7 @@ unsigned char gaussian_filter(int w, int h,int shift)
 			{
 				continue;
 			} 
-			tmp += filter_G[j * ws + i] * pic_in[3 * (h * img_width + w) + shift];
+			tmp += filter_G[j * ws + i] * pic_in[3 * (b * img_width + a) + shift];
 		}
 	}
 
@@ -91,24 +91,25 @@ int main()
 	FILE* mask;
 	mask = fopen("mask_Gaussian.txt", "r");
 	fscanf(mask, "%d", &FILTER_SIZE);
-	filter_G = new int[FILTER_SIZE];
+	filter_G = new float[FILTER_SIZE];
 
 	for (int i = 0; i < FILTER_SIZE; i++)
 	{
-		fscanf(mask, "%d", &filter_G[i]);
+		fscanf(mask, "%f", &filter_G[i]);
 	}
 
 	FILTER_SCALE = 0.0f; //recalculate
 	for (int i = 0; i < FILTER_SIZE; i++)
 	{
+		filter_G[i] *= 1000000;
 		FILTER_SCALE += filter_G[i];	
 	}
-	printf("filter scale [%d] \n", FILTER_SCALE);
+	printf("filter scale [%f] \n", FILTER_SCALE);
 	fclose(mask);
 
 
 	BmpReader* bmpReader = new BmpReader();
-	for (int k = 2; k  <  3; k++)
+	for (int k = 0; k  <  5; k++)
 	{
 		// read input BMP file
 		pic_in = bmpReader -> ReadBMP(inputfile_name[k], &img_width, &img_height);
@@ -132,12 +133,12 @@ int main()
 				// , getval_g
 				// , getval_b
 				// );
-				if ( pic_in[3 * (j * img_width + i) + MYRED] != getval_r 
-				&& pic_in[3 * (j * img_width + i) + MYGREEN] != getval_g
-				&& pic_in[3 * (j * img_width + i) + MYBLUE] != getval_b)
-				{
-					printf("diffcnt %d\n", ++cnt);
-				}
+				// if ( pic_in[3 * (j * img_width + i) + MYRED] != getval_r 
+				// && pic_in[3 * (j * img_width + i) + MYGREEN] != getval_g
+				// && pic_in[3 * (j * img_width + i) + MYBLUE] != getval_b)
+				// {
+				// 	printf("diffcnt %d\n", ++cnt);
+				// }
 				pic_out[3 * (j * img_width + i) + MYRED] = gaussian_filter(i, j, MYRED);
 				pic_out[3 * (j * img_width + i) + MYGREEN] = gaussian_filter(i, j, MYGREEN);
 				pic_out[3 * (j * img_width + i) + MYBLUE] = gaussian_filter(i, j, MYBLUE);
