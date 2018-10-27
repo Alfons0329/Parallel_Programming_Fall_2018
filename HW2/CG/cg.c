@@ -147,29 +147,36 @@ int main(int argc, char *argv[])
   //      Shift the col index vals from actual (firstcol --> lastcol ) 
   //      to local, i.e., (0 --> lastcol-firstcol)
   //---------------------------------------------------------------------
-  for (j = 0; j < lastrow - firstrow + 1; j++) 
+  #pragma omp parallel sections
   {
-    #pragma omp parallel for
-    for (k = rowstr[j]; k < rowstr[j+1]; k++) 
+    #pragma omp section
+    for (j = 0; j < lastrow - firstrow + 1; j++) 
     {
-      colidx[k] = colidx[k] - firstcol;
+      // #pragma omp parallel for reduction(-:colidx)
+      for (k = rowstr[j]; k < rowstr[j+1]; k++) 
+      {
+        colidx[k] = colidx[k] - firstcol;
+      }
     }
-  }
 
-  //---------------------------------------------------------------------
-  // set starting vector to (1, 1, .... 1)
-  //---------------------------------------------------------------------
-  #pragma omp parallel for
-  for (i = 0; i < NA+1; i++) {
-    x[i] = 1.0;
-  }
+    //---------------------------------------------------------------------
+    // set starting vector to (1, 1, .... 1)
+    //---------------------------------------------------------------------
+    // #pragma omp parallel for
+    #pragma omp section
+    for (i = 0; i < NA+1; i++) {
+      x[i] = 1.0;
+    }
 
-  #pragma omp parallel for
-  for (j = 0; j < lastcol - firstcol + 1; j++) {
-    q[j] = 0.0;
-    z[j] = 0.0;
-    r[j] = 0.0;
-    p[j] = 0.0;
+    // #pragma omp parallel for
+    #pragma omp section
+    for (j = 0; j < lastcol - firstcol + 1; j++) {
+      q[j] = 0.0;
+      z[j] = 0.0;
+      r[j] = 0.0;
+      p[j] = 0.0;
+    }
+
   }
 
   zeta = 0.0;
@@ -265,7 +272,9 @@ int main(int argc, char *argv[])
     //---------------------------------------------------------------------
     // Normalize z to obtain x
     //---------------------------------------------------------------------
-    for (j = 0; j < lastcol - firstcol + 1; j++) {
+    #pragma omp parallel for
+    for (j = 0; j < lastcol - firstcol + 1; j++) 
+    {
       x[j] = norm_temp2 * z[j];
     }
   } // end of main iter inv pow meth
@@ -323,7 +332,8 @@ static void conj_grad(int colidx[],
   //---------------------------------------------------------------------
   // Initialize the CG algorithm:
   //---------------------------------------------------------------------
-  for (j = 0; j < naa+1; j++) {
+  // #pragma omp parallel for, not ideal
+  for (j = 0; j < naa + 1; j++) {
     q[j] = 0.0;
     z[j] = 0.0;
     r[j] = x[j];

@@ -19,10 +19,12 @@ cd bin
 #compare and show
 cd ../result
 echo "Single thread without OpenMP optimization"
+echo $(cat "single_thread_res.txt" | grep VERIFICATION)
 echo $(cat "single_thread_res.txt" | grep Initialization)
 echo $(cat "single_thread_res.txt" | grep Execution)
-
+echo ""
 echo "Multi thread with OpenMP optimization"
+echo $(cat "multi_thread_res.txt" | grep VERIFICATION)
 echo $(cat "multi_thread_res.txt" | grep Initialization)
 echo $(cat "multi_thread_res.txt" | grep Execution)
 cd ..

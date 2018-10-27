@@ -4,7 +4,7 @@ CG start...
  Size:       14000
  Iterations:    15
 
- Initialization time =           0.438 seconds
+ Initialization time =           0.426 seconds
 
    iteration           ||r||                 zeta
         1       2.60650812147631E-13    19.9997581277040
@@ -29,5 +29,5 @@ Complete...
  Error is    5.2470766332253E-14
 
 
-Execution time : 0.828202 seconds
+Execution time : 0.838776 seconds
 
