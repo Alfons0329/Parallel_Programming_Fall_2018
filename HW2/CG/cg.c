@@ -646,7 +646,8 @@ static void sparse(double a[],
   //---------------------------------------------------------------------
   // ... remove empty entries and generate final results
   //---------------------------------------------------------------------
-  for (j = 1; j < nrows; j++) {
+  for (j = 1; j < nrows; j++) 
+  {
     nzloc[j] = nzloc[j] + nzloc[j-1];
   }
 
