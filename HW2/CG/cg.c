@@ -445,24 +445,27 @@ static void conj_grad(int colidx[],
   // The partition submatrix-vector multiply
   //---------------------------------------------------------------------
   sum = 0.0;
-  #pragma omp parallel for
-  for (j = 0; j < lastrow - firstrow + 1; j++) {
-    d = 0.0;
-    for (k = rowstr[j]; k < rowstr[j+1]; k++) {
-      d = d + a[k]*z[colidx[k]];
+  #pragma omp parallel
+  {
+    #pragma omp for
+    for (j = 0; j < lastrow - firstrow + 1; j++) {
+      d = 0.0;
+      for (k = rowstr[j]; k < rowstr[j+1]; k++) {
+        d = d + a[k]*z[colidx[k]];
+      }
+      r[j] = d;
     }
-    r[j] = d;
-  }
 
-  //---------------------------------------------------------------------
-  // At this point, r contains A.z
-  //---------------------------------------------------------------------
-  #pragma omp parallel for //reduction(+:sum)
-  for (j = 0; j < lastcol-firstcol+1; j++) {
-    d   = x[j] - r[j];
-    sum = sum + d*d;
-  }
+    //---------------------------------------------------------------------
+    // At this point, r contains A.z
+    //---------------------------------------------------------------------
+    #pragma omp for //reduction(+:sum)
+    for (j = 0; j < lastcol-firstcol+1; j++) {
+      d   = x[j] - r[j];
+      sum = sum + d*d;
+    }
 
+  }
   *rnorm = sqrt(sum);
 }
 
