@@ -528,12 +528,13 @@ static void makea(int n,
   //---------------------------------------------------------------------
   // Generate nonzero positions and save for the use in sparse.
   //---------------------------------------------------------------------
+  //#pragma omp parallel for //*********** DO NOT OPTIMIZE THIS PART, OTHERWISE THE RESULT WILL GONE!!!*****************// 
   for (iouter = 0; iouter < n; iouter++) {
     nzv = NONZER;
     sprnvc(n, nzv, nn1, vc, ivc);
     vecset(n, vc, ivc, &nzv, iouter+1, 0.5);
     arow[iouter] = nzv;
-    
+    #pragma omp parallel for
     for (ivelt = 0; ivelt < nzv; ivelt++) {
       acol[iouter][ivelt] = ivc[ivelt] - 1;
       aelt[iouter][ivelt] = vc[ivelt];
@@ -587,10 +588,12 @@ static void sparse(double a[],
   //---------------------------------------------------------------------
   // ...count the number of triples in each row
   //---------------------------------------------------------------------
+  //#pragma omp parallel for
   for (j = 0; j < nrows+1; j++) {
     rowstr[j] = 0;
   }
 
+  //#pragma omp parallel for
   for (i = 0; i < n; i++) {
     for (nza = 0; nza < arow[i]; nza++) {
       j = acol[i][nza] + 1;
@@ -599,6 +602,7 @@ static void sparse(double a[],
   }
 
   rowstr[0] = 0;
+  //#pragma omp parallel for
   for (j = 1; j < nrows+1; j++) {
     rowstr[j] = rowstr[j] + rowstr[j-1];
   }
@@ -617,6 +621,7 @@ static void sparse(double a[],
   //---------------------------------------------------------------------
   // ... preload data pages
   //---------------------------------------------------------------------
+  //#pragma omp parallel for
   for (j = 0; j < nrows; j++) {
     for (k = rowstr[j]; k < rowstr[j+1]; k++) {
       a[k] = 0.0;
@@ -631,6 +636,7 @@ static void sparse(double a[],
   size = 1.0;
   ratio = pow(rcond, (1.0 / (double)(n)));
 
+  //#pragma omp parallel for, no speed up *************VERIFICATION FAILED WITH THIS ONE*********************
   for (i = 0; i < n; i++) {
     for (nza = 0; nza < arow[i]; nza++) {
       j = acol[i][nza];
@@ -690,11 +696,13 @@ static void sparse(double a[],
   //---------------------------------------------------------------------
   // ... remove empty entries and generate final results
   //---------------------------------------------------------------------
+  //#pragma omp parallel for
   for (j = 1; j < nrows; j++) 
   {
     nzloc[j] = nzloc[j] + nzloc[j-1];
   }
 
+  //#pragma omp parallel for, no speed up *************VERIFICATION FAILED WITH THIS ONE*********************
   for (j = 0; j < nrows; j++) {
     if (j > 0) {
       j1 = rowstr[j] - nzloc[j-1];
@@ -709,6 +717,7 @@ static void sparse(double a[],
       nza = nza + 1;
     }
   }
+  #pragma omp parallel for
   for (j = 1; j < nrows+1; j++) {
     rowstr[j] = rowstr[j] - nzloc[j-1];
   }
@@ -746,6 +755,7 @@ static void sprnvc(int n, int nz, int nn1, double v[], int iv[])
     // was this integer generated already?
     //---------------------------------------------------------------------
     logical was_gen = false;
+    //#pragma omp parallel for,*************** error openmp cannot be used with break statement******************
     for (ii = 0; ii < nzv; ii++) {
       if (iv[ii] == i) {
         was_gen = true;
@@ -779,7 +789,6 @@ static void vecset(int n, double v[], int iv[], int *nzv, int i, double val)
   logical set;
 
   set = false;
-  #pragma omp parallel
   {
     #pragma omp parallel for
     for (k = 0; k < *nzv; k++) 
