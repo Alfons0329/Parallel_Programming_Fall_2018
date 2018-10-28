@@ -447,6 +447,8 @@ static void conj_grad(int colidx[],
   // The partition submatrix-vector multiply
   //---------------------------------------------------------------------
   sum = 0.0;
+
+  #pragma omp parallel for
   for (j = 0; j < lastrow - firstrow + 1; j++) {
     d = 0.0;
     for (k = rowstr[j]; k < rowstr[j+1]; k++) {
@@ -526,6 +528,7 @@ static void makea(int n,
   //---------------------------------------------------------------------
   // Generate nonzero positions and save for the use in sparse.
   //---------------------------------------------------------------------
+  // #pragma omp parallel for **************result crash with this************
   for (iouter = 0; iouter < n; iouter++) {
     nzv = NONZER;
     sprnvc(n, nzv, nn1, vc, ivc);
