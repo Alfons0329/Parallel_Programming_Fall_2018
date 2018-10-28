@@ -338,22 +338,26 @@ static void conj_grad(int colidx[],
   //---------------------------------------------------------------------
   // Initialize the CG algorithm:
   //---------------------------------------------------------------------
-  #pragma omp parallel for
-  for (j = 0; j < naa + 1; j++) {
-    q[j] = 0.0;
-    z[j] = 0.0;
-    r[j] = x[j];
-    p[j] = r[j];
-  }
+  #pragma omp parallel
+  {
+    #pragma omp for
+    for (j = 0; j < naa + 1; j++) {
+      q[j] = 0.0;
+      z[j] = 0.0;
+      r[j] = x[j];
+      p[j] = r[j];
+    }
 
-  //---------------------------------------------------------------------
-  // rho = r.r
-  // Now, obtain the norm of r: First, sum squares of r elements locally...
-  //---------------------------------------------------------------------
-  #pragma omp parallel for reduction(+:rho)
-  for (j = 0; j < lastcol - firstcol + 1; j++) {
-    rho = rho + r[j]*r[j];
+    //---------------------------------------------------------------------
+    // rho = r.r
+    // Now, obtain the norm of r: First, sum squares of r elements locally...
+    //---------------------------------------------------------------------
+    #pragma omp for reduction(+:rho)
+    for (j = 0; j < lastcol - firstcol + 1; j++) {
+     rho = rho + r[j]*r[j];
+    }
   }
+  
 
   //---------------------------------------------------------------------
   //---->
@@ -376,7 +380,7 @@ static void conj_grad(int colidx[],
     #pragma omp parallel for //**********speed increases here (bottleneck?)!!!!!************
     for (j = 0; j < lastrow - firstrow + 1; j++) {
       sum = 0.0;
-      // #pragma omp parallel for reduction(+:sum) without 
+      //#pragma omp parallel for reduction(+:sum) // no speed up, inner loop for bad idea(too mych overhead) 
       for (k = rowstr[j]; k < rowstr[j+1]; k++) {
         sum = sum + a[k]*p[colidx[k]];
       }
@@ -441,6 +445,7 @@ static void conj_grad(int colidx[],
   // The partition submatrix-vector multiply
   //---------------------------------------------------------------------
   sum = 0.0;
+  #pragma omp parallel for
   for (j = 0; j < lastrow - firstrow + 1; j++) {
     d = 0.0;
     for (k = rowstr[j]; k < rowstr[j+1]; k++) {
@@ -452,7 +457,7 @@ static void conj_grad(int colidx[],
   //---------------------------------------------------------------------
   // At this point, r contains A.z
   //---------------------------------------------------------------------
-  #pragma omp parallel for reduction(+:sum)
+  #pragma omp parallel for //reduction(+:sum)
   for (j = 0; j < lastcol-firstcol+1; j++) {
     d   = x[j] - r[j];
     sum = sum + d*d;
