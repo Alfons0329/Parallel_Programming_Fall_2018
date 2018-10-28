@@ -147,17 +147,19 @@ int main(int argc, char *argv[])
   //      Shift the col index vals from actual (firstcol --> lastcol ) 
   //      to local, i.e., (0 --> lastcol-firstcol)
   //---------------------------------------------------------------------
-  #pragma omp parallel sections
+  // #pragma omp parallel sections, no speed up
   {
-    #pragma omp section
+    // #pragma omp section, no speed up
     {
       #pragma omp parallel for
       for (j = 0; j < lastrow - firstrow + 1; j++) 
       {
-        // #pragma omp parallel for reduction(-:colidx)
-        for (k = rowstr[j]; k < rowstr[j+1]; k++) 
+        // #pragma omp parallel for reduction(-:colidx) //, no speed up
+        for (k = rowstr[j]; k < rowstr[j+1]; k+=3) //try loop unrolling
         {
           colidx[k] = colidx[k] - firstcol;
+          colidx[k + 1] = colidx[k + 1] - firstcol;
+          colidx[k + 2] = colidx[k + 2] - firstcol;
         }
       }
     }
@@ -165,8 +167,7 @@ int main(int argc, char *argv[])
     //---------------------------------------------------------------------
     // set starting vector to (1, 1, .... 1)
     //---------------------------------------------------------------------
-    // #pragma omp parallel for
-    #pragma omp section
+    // #pragma omp section
     {
       #pragma omp parallel for
       for (i = 0; i < NA+1; i++) {
@@ -174,7 +175,7 @@ int main(int argc, char *argv[])
       }
     }
 
-    #pragma omp section
+    // #pragma omp section
     {
       #pragma omp parallel for
       for (j = 0; j < lastcol - firstcol + 1; j++) {
@@ -264,7 +265,9 @@ int main(int argc, char *argv[])
     norm_temp1 = 0.0;
     norm_temp2 = 0.0;
     
-    #pragma omp parallel for reduction(+:norm_temp1, norm_temp2)
+    // tried the following two pragma, but seems not speed up with these two
+    // #pragma omp parallel for reduction(+:norm_temp1, norm_temp2)
+    // #pragma omp parallel for reduction(+:norm_temp1, norm_temp2) private(j)
     for (j = 0; j < lastcol - firstcol + 1; j++) {
       norm_temp1 = norm_temp1 + x[j]*z[j];
       norm_temp2 = norm_temp2 + z[j]*z[j];
@@ -340,7 +343,7 @@ static void conj_grad(int colidx[],
   //---------------------------------------------------------------------
   // Initialize the CG algorithm:
   //---------------------------------------------------------------------
-  #pragma omp parallel for private(j)
+  #pragma omp parallel for
   for (j = 0; j < naa + 1; j++) {
     q[j] = 0.0;
     z[j] = 0.0;
@@ -375,8 +378,10 @@ static void conj_grad(int colidx[],
     //       The unrolled-by-8 version below is significantly faster
     //       on the Cray t3d - overall speed of code is 1.5 times faster.
 
+    #pragma omp parallel for //**********speed increases here (bottleneck?)!!!!!************
     for (j = 0; j < lastrow - firstrow + 1; j++) {
       sum = 0.0;
+      // #pragma omp parallel for reduction(+:sum) without 
       for (k = rowstr[j]; k < rowstr[j+1]; k++) {
         sum = sum + a[k]*p[colidx[k]];
       }
