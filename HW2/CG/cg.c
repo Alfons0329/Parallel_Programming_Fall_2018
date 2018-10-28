@@ -148,19 +148,18 @@ int main(int argc, char *argv[])
   //      to local, i.e., (0 --> lastcol-firstcol)
   //---------------------------------------------------------------------
   // #pragma omp parallel sections, no speed up
+  #pragma omp parallel
   {
     // #pragma omp section, no speed up
+    #pragma omp for
+    for (j = 0; j < lastrow - firstrow + 1; j++) 
     {
-      #pragma omp parallel for
-      for (j = 0; j < lastrow - firstrow + 1; j++) 
+      // #pragma omp parallel for reduction(-:colidx) //, no speed up
+      for (k = rowstr[j]; k < rowstr[j+1]; k+=3) //try loop unrolling
       {
-        // #pragma omp parallel for reduction(-:colidx) //, no speed up
-        for (k = rowstr[j]; k < rowstr[j+1]; k+=3) //try loop unrolling
-        {
-          colidx[k] = colidx[k] - firstcol;
-          colidx[k + 1] = colidx[k + 1] - firstcol;
-          colidx[k + 2] = colidx[k + 2] - firstcol;
-        }
+        colidx[k] = colidx[k] - firstcol;
+        colidx[k + 1] = colidx[k + 1] - firstcol;
+        colidx[k + 2] = colidx[k + 2] - firstcol;
       }
     }
 
@@ -168,22 +167,18 @@ int main(int argc, char *argv[])
     // set starting vector to (1, 1, .... 1)
     //---------------------------------------------------------------------
     // #pragma omp section
-    {
-      #pragma omp parallel for
-      for (i = 0; i < NA+1; i++) {
-        x[i] = 1.0;
-      }
+    #pragma omp for
+    for (i = 0; i < NA+1; i++) {
+      x[i] = 1.0;
     }
 
     // #pragma omp section
-    {
-      #pragma omp parallel for
-      for (j = 0; j < lastcol - firstcol + 1; j++) {
-        q[j] = 0.0;
-        z[j] = 0.0;
-        r[j] = 0.0;
-        p[j] = 0.0;
-      }
+    #pragma omp for
+    for (j = 0; j < lastcol - firstcol + 1; j++) {
+      q[j] = 0.0;
+      z[j] = 0.0;
+      r[j] = 0.0;
+      p[j] = 0.0;
     }
 
   }
@@ -209,7 +204,7 @@ int main(int argc, char *argv[])
     //---------------------------------------------------------------------
     norm_temp1 = 0.0;
     norm_temp2 = 0.0;
-    #pragma omp paralle for reduction(+:norm_temp1, norm_temp2)
+    // #pragma omp paralle for reduction(+:norm_temp1, norm_temp2)
     for (j = 0; j < lastcol - firstcol + 1; j++) {
       norm_temp1 = norm_temp1 + x[j] * z[j];
       norm_temp2 = norm_temp2 + z[j] * z[j];
@@ -220,7 +215,7 @@ int main(int argc, char *argv[])
     //---------------------------------------------------------------------
     // Normalize z to obtain x
     //---------------------------------------------------------------------
-    #pragma omp parallel for
+    // #pragma omp parallel for
     for (j = 0; j < lastcol - firstcol + 1; j++) {     
       x[j] = norm_temp2 * z[j];
     }
@@ -265,9 +260,9 @@ int main(int argc, char *argv[])
     norm_temp1 = 0.0;
     norm_temp2 = 0.0;
     
-    // tried the following two pragma, but seems not speed up with these two
-    // #pragma omp parallel for reduction(+:norm_temp1, norm_temp2)
+    // tried the following two pragma, but seems not speed up with these two, inner for bad idea
     // #pragma omp parallel for reduction(+:norm_temp1, norm_temp2) private(j)
+    // #pragma omp parallel for reduction(+:norm_temp1, norm_temp2)
     for (j = 0; j < lastcol - firstcol + 1; j++) {
       norm_temp1 = norm_temp1 + x[j]*z[j];
       norm_temp2 = norm_temp2 + z[j]*z[j];
@@ -283,7 +278,7 @@ int main(int argc, char *argv[])
     //---------------------------------------------------------------------
     // Normalize z to obtain x
     //---------------------------------------------------------------------
-    #pragma omp parallel for
+    // #pragma omp parallel for, no speed up, inner for bad idea
     for (j = 0; j < lastcol - firstcol + 1; j++) 
     {
       x[j] = norm_temp2 * z[j];
