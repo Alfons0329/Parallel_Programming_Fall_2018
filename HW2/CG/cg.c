@@ -190,6 +190,7 @@ int main(int argc, char *argv[])
   // Do one iteration untimed to init all code and data page tables
   //---->                    (then reinit, start timing, to niter its)
   //---------------------------------------------------------------------
+  #pragma omp parallel for
   for (it = 1; it <= 1; it++) {
     //---------------------------------------------------------------------
     // The call to the conjugate gradient routine:
@@ -204,7 +205,7 @@ int main(int argc, char *argv[])
     //---------------------------------------------------------------------
     norm_temp1 = 0.0;
     norm_temp2 = 0.0;
-    // #pragma omp paralle for reduction(+:norm_temp1, norm_temp2)
+    // #pragma omp paralle for reduction(+:norm_temp1, norm_temp2) //no speed up much, inner loop bad idea
     for (j = 0; j < lastcol - firstcol + 1; j++) {
       norm_temp1 = norm_temp1 + x[j] * z[j];
       norm_temp2 = norm_temp2 + z[j] * z[j];
@@ -333,33 +334,38 @@ static void conj_grad(int colidx[],
   int cgit, cgitmax = 25;
   double d, sum, rho, rho0, alpha, beta;
 
+
   rho = 0.0;
+  #pragma omp parallel
+  {
+    //---------------------------------------------------------------------
+    // Initialize the CG algorithm:
+    //---------------------------------------------------------------------
+    #pragma omp for
+    for (j = 0; j < naa + 1; j++) {
+      q[j] = 0.0;
+      z[j] = 0.0;
+      r[j] = x[j];
+      p[j] = r[j];
+    }
 
-  //---------------------------------------------------------------------
-  // Initialize the CG algorithm:
-  //---------------------------------------------------------------------
-  #pragma omp parallel for
-  for (j = 0; j < naa + 1; j++) {
-    q[j] = 0.0;
-    z[j] = 0.0;
-    r[j] = x[j];
-    p[j] = r[j];
+    //---------------------------------------------------------------------
+    // rho = r.r
+    // Now, obtain the norm of r: First, sum squares of r elements locally...
+    //---------------------------------------------------------------------
+    #pragma omp for
+    for (j = 0; j < lastcol - firstcol + 1; j++) {
+      rho = rho + r[j]*r[j];
+    }
   }
 
-  //---------------------------------------------------------------------
-  // rho = r.r
-  // Now, obtain the norm of r: First, sum squares of r elements locally...
-  //---------------------------------------------------------------------
-  #pragma omp parallel for reduction(+:rho)
-  for (j = 0; j < lastcol - firstcol + 1; j++) {
-    rho = rho + r[j]*r[j];
-  }
 
   //---------------------------------------------------------------------
   //---->
   // The conj grad iteration loop
   //---->
   //---------------------------------------------------------------------
+  // #pragma omp parallel for
   for (cgit = 1; cgit <= cgitmax; cgit++) {
     //---------------------------------------------------------------------
     // q = A.p
@@ -376,7 +382,7 @@ static void conj_grad(int colidx[],
     #pragma omp parallel for //**********speed increases here (bottleneck?)!!!!!************
     for (j = 0; j < lastrow - firstrow + 1; j++) {
       sum = 0.0;
-      // #pragma omp parallel for reduction(+:sum) without 
+      // #pragma omp parallel for reduction(+:sum) // no speed up(even worse), inner for loop bad idea 
       for (k = rowstr[j]; k < rowstr[j+1]; k++) {
         sum = sum + a[k]*p[colidx[k]];
       }
