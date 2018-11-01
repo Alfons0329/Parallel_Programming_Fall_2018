@@ -7,7 +7,7 @@ cd ../original_no_omp/CG/
 make clean
 make
 cd bin
-./cg > ../../../CG/result/single_thread_res.txt 
+./cg > ../../../CG/result/single_thread_res.txt
 
 #multi thread with OpenMP execution
 cd ../../../CG/
@@ -28,4 +28,8 @@ echo $(cat "multi_thread_res.txt" | grep VERIFICATION)
 echo $(cat "multi_thread_res.txt" | grep Initialization)
 echo $(cat "multi_thread_res.txt" | grep Execution)
 cd ..
+
+taskset -c 0 ./bin/cg
+taskset -c 0,1 ./bin/cg
+taskset -c 0,1,2,3 ./bin/cg
 
