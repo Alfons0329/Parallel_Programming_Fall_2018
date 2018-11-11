@@ -5,14 +5,14 @@
 #single thread execution
 cd ../original_no_omp/CG/
 make clean
-make
+make DATASIZE=LARGE
 cd bin
 ./cg > ../../../CG/result/single_thread_res.txt
 
 #multi thread with OpenMP execution
 cd ../../../CG/
 make clean
-make
+make DATASIZE=LARGE
 cd bin
 ./cg > ../result/multi_thread_res.txt
 
