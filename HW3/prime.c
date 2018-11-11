@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <mip.h>
+#include <mpi.h>
 
 int isprime(int n)
 {
