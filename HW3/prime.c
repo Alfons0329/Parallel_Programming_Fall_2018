@@ -62,6 +62,10 @@ int main(int argc, char *argv[])
                 foundone = n;
             }
         }
+        MPI_Reduce(&pc, &total_prime, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+        MPI_Reduce(&foundone, &total_prime, 1, MPI_INT, MPI_MAX, 0, MPI_COMM_WORLD);
+        printf("Done. Largest prime is %d Total primes %d\n", foundone, pc);
+
     }
     /* 
      * slave machine example given for the MPI distributed computation
@@ -87,9 +91,6 @@ int main(int argc, char *argv[])
         }
     }
     /* update the result */
-    MPI_Reduce(&pc, &total_prime, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-    MPI_Reduce(&foundone, &total_prime, 1, MPI_INT, MPI_MAX, 0, MPI_COMM_WORLD);
-    printf("Done. Largest prime is %d Total primes %d\n", foundone, pc);
-    MPI_Finalize(); /* terminate all distributive computation */
+        MPI_Finalize(); /* terminate all distributive computation */
     return 0;
 }
