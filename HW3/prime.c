@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
 
     long long int 
         n, /* number to start count on */ 
-        limit /* upper size of count */
+        limit; /* upper size of count */
 
 
     int 
