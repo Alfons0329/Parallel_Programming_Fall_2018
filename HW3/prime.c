@@ -3,7 +3,7 @@
 #include <math.h>
 #include <mpi.h>
 #include <stdbool.h>
-/*int isprime(int n)
+int isprime(int n)
 {
     int i, squareroot;
     if (n > 10)
@@ -16,7 +16,8 @@
     }
     else
         return 0;
-}*/
+}
+/*
 bool isprime(long long int n)
 {
     if (n == 2) return true;
@@ -45,7 +46,7 @@ bool isprime(long long int n)
         return false;
     }
     return true;
-}
+}*/
 /* algorithm abstract
  * distribute the total / N primes to count for each
  * mod the number into range from 0 to N - 1
