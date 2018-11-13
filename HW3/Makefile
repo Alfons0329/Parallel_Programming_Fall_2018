@@ -20,5 +20,8 @@ prime: prime.c
 prime_normal: prime_normal.c
 		$(CC) -o $(TARGET3) $(SOURCE3) $(LIBS) 
 
+
 .PHONY: clean
+
+clean:
 	rm -f $(TARGET) $(TARGET2) $(TARGET3)
