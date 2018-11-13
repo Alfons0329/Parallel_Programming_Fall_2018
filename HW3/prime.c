@@ -3,7 +3,7 @@
 #include <math.h>
 #include <mpi.h>
 
-int isprime(int n)
+/*int isprime(int n)
 {
     int i, squareroot;
     if (n > 10)
@@ -16,6 +16,35 @@ int isprime(int n)
     }
     else
         return 0;
+}*/
+bool isprime(long long int n)
+{
+    if (n == 2) return true;
+    if (n < 2 || n % 2 == 0) return false;
+ 
+    long long int u = n - 1, t = 0;
+    while (u % 2 == 0) {u >>= 1; t++;}
+ 
+    long long int sprp[3] = {2, 7, 61};  
+    for (long long int k=0; k<3; ++k)
+    {
+        long long int a = sprp[k] % n;
+        if (a == 0 || a == 1 || a == n-1) continue;
+ 
+        long long int x = pow(a, u, n);
+        if (x == 1 || x == n-1) continue;
+ 
+        for (long long int i = 0; i < t-1; i++)
+        {
+            x = mul(x, x, n);
+            if (x == 1) return false;
+            if (x == n-1) break;
+        }
+        if (x == n-1) continue;
+ 
+        return false;
+    }
+    return true;
 }
 /* algorithm abstract
  * distribute the total / N primes to count for each
