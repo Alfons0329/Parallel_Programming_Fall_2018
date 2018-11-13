@@ -89,8 +89,10 @@ int main(int argc, char *argv[])
                 foundone = n;
             }
         }
+        MPI_Reduce(&pc, &total_prime, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+        MPI_Reduce(&foundone, &total_prime, 1, MPI_INT, MPI_MAX, 0, MPI_COMM_WORLD);
     }
     /* update the result */
-        MPI_Finalize(); /* terminate all distributive computation */
+    MPI_Finalize(); /* terminate all distributive computation */
     return 0;
 }
