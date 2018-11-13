@@ -2,9 +2,9 @@
 #To make mpiexec work properly, you need to be able to execute jobs on remote nodes without typing a password.
 #You will need to generate an ssh key by yourself.
 #De comment this line for SSH configuration
-#mkdir -p ∼/. ssh
-#ssh-keygen -t rsa
-#cat ∼/. ssh / id_rsa . pub >> ∼/. ssh / authorized_keys
+mkdir -p ∼/.ssh
+ssh-keygen -t rsa
+cat ∼/.ssh/id_rsa.pub >> ∼/.ssh/authorized_keys
 
 set -e
 #Build the source code
