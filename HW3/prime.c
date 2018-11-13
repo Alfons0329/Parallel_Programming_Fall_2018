@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <mpi.h>
-
+#include <stdbool.h>
 /*int isprime(int n)
 {
     int i, squareroot;
@@ -31,12 +31,12 @@ bool isprime(long long int n)
         long long int a = sprp[k] % n;
         if (a == 0 || a == 1 || a == n-1) continue;
  
-        long long int x = pow(a, u, n);
+        long long int x = ((long long int)pow(a, u)) % n;
         if (x == 1 || x == n-1) continue;
  
         for (long long int i = 0; i < t-1; i++)
         {
-            x = mul(x, x, n);
+            x = (x * x) % n;
             if (x == 1) return false;
             if (x == n-1) break;
         }
