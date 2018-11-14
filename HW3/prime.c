@@ -73,10 +73,10 @@ int main(int argc, char *argv[])
         printf("Starting. Numbers to be scanned= %lld\n",limit);
     }
 
-    for (register long long int n = 11 + rank ; n <= limit ; n += size) 
+    for (register long long int n = 11 + rank * 2; n <= limit; n += size * 2) 
     {
-        if (n & 1)
-        {
+        /*if (n & 1)
+        {*/
             if (n % 6 == 5 || n % 6 == 1)
             {
                 if (isprime(n)) 
@@ -90,11 +90,11 @@ int main(int argc, char *argv[])
                 continue;
             }
 
-        }
+       /* }
         else
         {
             continue;
-        }
+        }*/
     }
 
     if (rank != 0)
