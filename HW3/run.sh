@@ -52,9 +52,9 @@ else
     time /usr/lib64/openmpi/bin/mpiexec -n 1 -hostfile hostfile --map-by node ./integrate $nums
 
     echo "2 clusters"
-    time /usr/lib64/openmpi/bin/mpiexec -n 1 -hostfile hostfile --map-by node ./integrate $nums
+    time /usr/lib64/openmpi/bin/mpiexec -n 2 -hostfile hostfile --map-by node ./integrate $nums
 
     echo "3 clusters"
-    time /usr/lib64/openmpi/bin/mpiexec -n 1 -hostfile hostfile --map-by node ./integrate $nums
+    time /usr/lib64/openmpi/bin/mpiexec -n 3 -hostfile hostfile --map-by node ./integrate $nums
 fi
 
