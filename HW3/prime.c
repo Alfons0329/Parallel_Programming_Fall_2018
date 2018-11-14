@@ -38,17 +38,15 @@ int main(int argc, char *argv[])
     long long int n, /* number to start count on */ 
          limit; /* upper size of count */
 
-    sscanf(argv[1], "%llu", &limit); /* all the machines, including master and slave, gets the limit */
-    printf("Starting. Numbers to be scanned= %lld\n",limit);
-
-
     /*-------------------------------MPI data declaration starts--------------------------------*/
     int rank, /* CPU rank to identify which CPU is now used */ 
         size; /* task size for each cpu */
 
     struct prime_st sen, rcv; /* prime data struct for MPI computing, send and receive*/
     sen.max_prime = 0;
-    sen.cnt = 4;
+    sen.cnt = 0;
+
+    sscanf(argv[1], "%llu", &limit); /* all the machines, including master and slave, gets the limit */
 
     MPI_Datatype datatype, oldtype[1]; /* only one datatype, so oldtype length be 1 */
     int blockcount[1];
@@ -58,6 +56,8 @@ int main(int argc, char *argv[])
 
     /*-------------------------------MPI init starts--------------------------------*/
     MPI_Init(&argc, &argv);
+
+
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
@@ -71,20 +71,28 @@ int main(int argc, char *argv[])
 
     /*-------------------------------MPI init ends--------------------------------*/
 
+
+    if (rank == 0)
+    {
+        printf("Starting. Numbers to be scanned= %lld\n",limit);
+
+    }
     printf("size = %d rank = %d \n", size, rank);
 
     for (n = 11 + rank ; n <= limit ; n += size) 
     {
-        if (n & 1 == 0)
+        if (n & 1)
+        {
+            if (isprime(n)) 
+            {
+                sen.max_prime = n;
+                sen.cnt++;
+            }
+        }
+        else
         {
             continue;
         }
-        if (isprime(n)) 
-        {
-            sen.max_prime = n;
-            sen.cnt++;
-        }
-
     }
 
     if (rank != 0)
@@ -93,7 +101,7 @@ int main(int argc, char *argv[])
     }
     else 
     {
-        for (int i = 1 ; i < size ; i++) 
+        for (int i = 1 ; i < size ; i++) /* collect slave */
         {
             MPI_Recv(&rcv, 1, datatype, i, 0, MPI_COMM_WORLD, &status);
             sen.cnt += rcv.cnt;
@@ -110,7 +118,7 @@ int main(int argc, char *argv[])
 
     if (rank == 0)
     {
-        printf("Done. Largest prime is %lld Total primes %lld\n",sen.max_prime,sen.cnt);
+        printf("Done. Largest prime is %lld Total primes %lld\n",sen.max_prime,sen.cnt + 4);
     }
 
     return 0;
