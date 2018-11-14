@@ -24,7 +24,6 @@ int main(int argc, char **argv)
     } 
 
     printf("The total area is: %f\n", (float)sum);
-
     return 0;
 
 }   
