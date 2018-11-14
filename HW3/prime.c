@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
     /* define structured type and commit it */
     MPI_Type_create_struct(1, blockcount, offsets, oldtype, &datatype);
     MPI_Type_commit(&datatype);
-    
+
     sen.max_prime = 0;
     sen.cnt = 0;
     /*-------------------------------MPI init ends--------------------------------*/
@@ -79,11 +79,19 @@ int main(int argc, char *argv[])
     {
         if (n & 1)
         {
-            if (isprime(n)) 
+            if (n % 6 == 5 || n % 6 == 1)
             {
-                sen.max_prime = n;
-                sen.cnt++;
+                if (isprime(n)) 
+                {
+                    sen.max_prime = n;
+                    sen.cnt++;
+                }
             }
+            else
+            {
+                continue;
+            }
+
         }
         else
         {
@@ -106,7 +114,6 @@ int main(int argc, char *argv[])
                 sen.max_prime = rcv.max_prime;
             }
         }
-
     }
 
     MPI_Type_free(&datatype);
