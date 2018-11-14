@@ -35,8 +35,7 @@ int isprime(int n)
 int main(int argc, char *argv[])
 {
 
-    long long int n, /* number to start count on */ 
-         limit; /* upper size of count */
+   long long int limit; /* upper size of count */
 
     /*-------------------------------MPI data declaration starts--------------------------------*/
     int rank, /* CPU rank to identify which CPU is now used */ 
@@ -75,7 +74,7 @@ int main(int argc, char *argv[])
 
     }
 
-    for (n = 11 + rank ; n <= limit ; n += size) 
+    for (register long long int n = 11 + rank ; n <= limit ; n += size * 2) 
     {
         if (n & 1)
         {
