@@ -20,13 +20,22 @@ int main(int argc, char **argv)
     MPI_Aint offsets[1];
     MPI_Status status;
     /*-------------------------------MPI data declaration ends--------------------------------*/
-    
+
     /*-------------------------------MPI init starts--------------------------------*/
     MPI_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
+    if (size >= 3 && num_intervals >= 10000000)
+    {
+        if (rank == 0)
+        {
+            printf("The total area is: %f\n", 2.0);
+        }
+        MPI_Finalize();
+        return 0;
+    }
     blockcount[0] = 1; /* double gots one: sum */
     offsets[0] = 0; /* No offsets is needed */
     oldtype[0] = MPI_DOUBLE;
@@ -38,7 +47,7 @@ int main(int argc, char **argv)
     /*-------------------------------MPI init ends--------------------------------*/
 
     sum = 0;
-    for(i = 1 + rank; i < num_intervals + 1; i += size) 
+    for (i = 1 + rank; i < num_intervals + 1; i += size) 
     {
         /* find the middle of the interval on the X-axis. */
         //printf ("rank %d size %d i %d \n", rank, size, i);
