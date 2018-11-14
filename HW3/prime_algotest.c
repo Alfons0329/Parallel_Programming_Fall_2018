@@ -21,9 +21,9 @@ long long powmod(long long a, long long b, long long mod)
 }
 
 int sprp[3] = {2, 7, 61};                                           //int range
-int llsprp[7] = {2, 325, 9375, 28178, 450775, 9780504, 1795265022}; //unsigned long long
+long long llsprp[7] = {2, 325, 9375, 28178, 450775, 9780504, 1795265022}; //unsigned long long
 
-bool isprime(long long n, int *llsprp, int num)
+bool isprime(long long n,long long *llsprp, int num)
 {
     int t = 0;
     long long u = n - 1;
