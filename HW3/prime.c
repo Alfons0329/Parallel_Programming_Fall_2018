@@ -38,6 +38,10 @@ int main(int argc, char *argv[])
     long long int n, /* number to start count on */ 
          limit; /* upper size of count */
 
+    sscanf(argv[1], "%llu", &limit); /* all the machines, including master and slave, gets the limit */
+    printf("Starting. Numbers to be scanned= %lld\n",limit);
+
+
     /*-------------------------------MPI data declaration starts--------------------------------*/
     int rank, /* CPU rank to identify which CPU is now used */ 
         size; /* task size for each cpu */
@@ -64,11 +68,17 @@ int main(int argc, char *argv[])
     /* define structured type and commit it */
     MPI_Type_create_struct(1, blockcount, offsets, oldtype, &datatype);
     MPI_Type_commit(&datatype);
+
     /*-------------------------------MPI init ends--------------------------------*/
+
     printf("size = %d rank = %d \n", size, rank);
 
-    for (n = 11 + size ; n <= limit ; n += 2 * size) 
+    for (n = 11 + rank ; n <= limit ; n += size) 
     {
+        if (n & 1 == 0)
+        {
+            continue;
+        }
         if (isprime(n)) 
         {
             sen.max_prime = n;
