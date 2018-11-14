@@ -11,7 +11,7 @@ set -e
 echo "Build the normal version prime checker"
 make prime_normal
 echo "Build the MPI(distributed computing) version prime checker"
-make prime
+make prime_mpi
 
 #Executing the program
 echo "Normal version, non MPI version"
