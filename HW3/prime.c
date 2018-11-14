@@ -3,7 +3,14 @@
 #include <math.h>
 #include <mpi.h>
 #include <stdbool.h>
+#define ll long long
 #define LLSPRP_MAX 7
+
+struct prime_st
+{
+    ll max_prime, cnt;
+};
+
 int isprime(int n)
 {
     int i, squareroot;
@@ -18,17 +25,12 @@ int isprime(int n)
     else
         return 0;
 }
-/* algorithm abstract
- * distribute the total / N primes to count for each
- * mod the number into range from 0 to N - 1
- * the slave CPU #0 search the number K { K | K % N = 0 } to determine the prime, and the like
- * */
+/* algorithm from ppt p48*/
 int main(int argc, char *argv[])
 {
     int 
         pc,       /* prime counter */
         foundone, /* most recent prime found */
-        max_prime = 0,
         total_prime = 0;
 
     long long int 
@@ -68,14 +70,6 @@ int main(int argc, char *argv[])
         printf("Done. Largest prime is %d Total primes %d\n", foundone, pc);
 
     }
-    /* 
-     * slave machine example given for the MPI distributed computation
-     master search for 11 16
-     slave 1 search for 12 17
-     slave 2 search for 13 18
-     slave 3 search for 14 19
-     slave 4 search for 15 20
-     */
     else if(rank > 0)
     {
         for (n = 11 + rank; n <= limit; n+=rank)
