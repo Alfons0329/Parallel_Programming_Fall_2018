@@ -4,7 +4,6 @@
 #include <mpi.h>
 #include <stdbool.h>
 #define LLSPRP_MAX 7
-/*
 int isprime(int n)
 {
     int i, squareroot;
@@ -19,60 +18,6 @@ int isprime(int n)
     else
         return 0;
 }
-*/
-long long mod_mul(long long a, long long b, long long m)
-{
-    a %= m, b %= m;
-    long long y = (long long)((double)a * b / m + 0.5); /* fast for m < 2^58 */
-    long long r = (a * b - y * m) % m;
-    return r < 0 ? r + m : r;
-}
-
-long long powmod(long long a, long long b, long long mod)
-{ 
-    long long ans = 1;
-    for (; b; a = mod_mul(a, a, mod), b >>= 1)
-        if (b & 1)
-            ans = mod_mul(ans, a, mod);
-    return ans;
-}
-
-int sprp[3] = {2, 7, 61};                                           //int range
-int llsprp[7] = {2, 325, 9375, 28178, 450775, 9780504, 1795265022}; //unsigned long long
-
-bool isprime(long long n, int *llsprp, int num)
-{
-    int t = 0;
-    long long u = n - 1;
-
-    for (; u % 2 == 0; ++t)
-    {
-        u >>= 1;
-    } 
-
-    for (int i = 0; i < num; ++i)
-    {
-        long long a = llsprp[i] % n;
-        if (a == 0 || a == 1 || a == n - 1)
-            continue;
-        long long x = powmod(a, u, n);
-        if (x == 1 || x == n - 1)
-            continue;
-        for (int j = 1; j < t; ++j)
-        {
-            x = mod_mul(x, x, n);
-            if (x == 1)
-                return 0;
-            if (x == n - 1)
-                break;
-        }
-        if (x == n - 1)
-            continue;
-        return 0;
-    }
-    return 1;
-}
-
 /* algorithm abstract
  * distribute the total / N primes to count for each
  * mod the number into range from 0 to N - 1
@@ -112,7 +57,7 @@ int main(int argc, char *argv[])
             {
                 continue; 
             }
-            if (isprime(n, llsprp, LLSPRP_MAX))
+            if (isprime(n))
             {
                 pc++;
                 foundone = n;
@@ -139,7 +84,7 @@ int main(int argc, char *argv[])
             {
                 continue; 
             }
-            if (isprime(n, llsprp, LLSPRP_MAX))
+            if (isprime(n))
             {
                 pc++;
                 foundone = n;
