@@ -58,6 +58,9 @@ int main(int argc, char **argv)
             sen += rcv;
         }
     }
+    MPI_Type_free(&datatype);
+    MPI_Finalize();
+
 
     if (rank == 0)
     {
