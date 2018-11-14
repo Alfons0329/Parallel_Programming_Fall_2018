@@ -43,10 +43,6 @@ int main(int argc, char *argv[])
         size; /* task size for each cpu */
 
     struct prime_st sen, rcv; /* prime data struct for MPI computing, send and receive*/
-    sen.max_prime = 0;
-    sen.cnt = 0;
-
-    sscanf(argv[1], "%llu", &limit); /* all the machines, including master and slave, gets the limit */
 
     MPI_Datatype datatype, oldtype[1]; /* only one datatype, so oldtype length be 1 */
     int blockcount[1];
@@ -57,6 +53,7 @@ int main(int argc, char *argv[])
     /*-------------------------------MPI init starts--------------------------------*/
     MPI_Init(&argc, &argv);
 
+    sscanf(argv[1], "%llu", &limit); /* all the machines, including master and slave, gets the limit */
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -68,16 +65,15 @@ int main(int argc, char *argv[])
     /* define structured type and commit it */
     MPI_Type_create_struct(1, blockcount, offsets, oldtype, &datatype);
     MPI_Type_commit(&datatype);
-
+    
+    sen.max_prime = 0;
+    sen.cnt = 0;
     /*-------------------------------MPI init ends--------------------------------*/
-
-
     if (rank == 0)
     {
         printf("Starting. Numbers to be scanned= %lld\n",limit);
 
     }
-    printf("size = %d rank = %d \n", size, rank);
 
     for (n = 11 + rank ; n <= limit ; n += size) 
     {
