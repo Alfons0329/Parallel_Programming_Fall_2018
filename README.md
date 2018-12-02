@@ -7,3 +7,6 @@
 
 * Conjugate Gradient calculation [HW2 Repo](HW2/CG)
     * Use the OpenMP library to accelerate the computation
+
+* Prime searching, counting and integration under sin(X) by using the OpenMPI(message passing model) [HW3 Repo](HW3/)
+    * Use the OpenMPI(message passing model) library to accelerate the computation (mainly the distributive computation)
