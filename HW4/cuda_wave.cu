@@ -101,7 +101,7 @@ __global__ void update(float *cuda_value, int tpoints, int nsteps)
             }
             else
             {
-                new_tmp = (2.0 * val_tmp) - old_tmp + (0.09 * (-2.0) * val_tmp);
+                new_tmp = (2.0f * val_tmp) - old_tmp + ( (-0.18f) * val_tmp);
             }
             /* Update old values with new values */
             old_tmp = val_tmp;

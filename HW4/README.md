@@ -12,3 +12,9 @@
  
     ```
     diff is 82 in 10000 pts
+
+*
+    ```
+    new_tmp = (2.0f * val_tmp) - old_tmp + ( (-0.18f) * val_tmp);
+    ```
+    diff is 148 in 10000 pts
