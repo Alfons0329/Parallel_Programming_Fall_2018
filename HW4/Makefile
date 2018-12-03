@@ -11,7 +11,7 @@ LIBS=-lm
 normal: serial_wave.c
 	$(CC) $(SOURCE) -o $(TARGET) $(LIBS)
 
-cuda: cuda_wave.c
+cuda: cuda_wave.cu
 	$(NVCC) $(SOURCE2) -o $(TARGET2) $(LIBS)
 
 .PHONY: clean
