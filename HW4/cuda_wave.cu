@@ -2,6 +2,8 @@
  * DESCRIPTION:
  *   Serial Concurrent Wave Equation - C Version
  *   This program implements the concurrent wave equation
+ *   TA machine is GTX1060, so the TILE_WIDTH should be set at 
+ *   corresponding to the spec (see L6 p155 or NVIDIA site) 
  *********************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,7 +14,7 @@
 #define MAXSTEPS 1000000
 #define MINPOINTS 20
 #define PI 3.14159265
-
+#define TILE_WIDTH 1024
 void check_param(void);
 void init_line(void);
 void update (void);
@@ -59,79 +61,55 @@ void check_param(void)
 }
 
 /**********************************************************************
- *     Initialize points on line
+ *  Update all values along line a specified number of times
+ *  Use each thread for the parallelization of for loop (parallelize the for i (1 to t) tpoints thread)   
  *********************************************************************/
-void init_line(void)
+/* Kernel function is this one */
+__global__ void update(float *cuda_value, int nsteps, int tpoints)
 {
+    int thread_ID = threadIdx.x + blockIdx.x * blockDim.x; /* the thread index of CUDA core */ 
+
     int i, j;
     float x, fac, k, tmp;
-
-    /* Calculate initial values based on sine curve */
-    fac = 2.0 * PI;
-    k = 0.0; 
-    tmp = tpoints - 1;
-    for (j = 1; j <= tpoints; j++) 
-    {
-        x = k/tmp;
-        values[j] = sin (fac * x);
-        k = k + 1.0;
-    } 
-
-    /* Initialize old values array */
-    for (i = 1; i <= tpoints; i++) 
-        oldval[i] = values[i];
-}
-
-/**********************************************************************
- *      Calculate new values using wave equation
- *********************************************************************/
-void do_math(int i)
-{
-    float dtime, c, dx, tau, sqtau;
-
-    dtime = 0.3;
-    c = 1.0;
-    dx = 1.0;
-    tau = (c * dtime / dx);
-    sqtau = tau * tau;
-    newval[i] = (2.0 * values[i]) - oldval[i] + (sqtau *  (-2.0)*values[i]);
-}
-
-/**********************************************************************
- *     Update all values along line a specified number of times
- *********************************************************************/
-__global__ void update(float *values)
-{
-    int i, j;
-
-    /*init line*/
-
-
-
-    int cuda_thread = threadIdx.x + 
-
+    float old_tmp, new_tmp, val_tmp;
     /* Update values for each time step */
-    for (i = 1; i<= nsteps; i++) 
+    if(thread_ID < 1 || thread_ID > tpoints)
     {
-        /* Update points along line for this time step */
-        for (j = 1; j <= tpoints; j++) 
-        {
-            /* global endpoints */
-            if ((j == 1) || (j  == tpoints))
-                newval[j] = 0.0;
-            else
-                do_math(j);
-        }
+        return;
+    }
+    else
+    {
+        /* init line */
 
-        /* Update old values with new values */
-        for (j = 1; j <= tpoints; j++) 
+        /* Calculate initial values based on sine curve */
+        fac = 2.0 * PI;
+        /* k = 0.0; */ 
+        tmp = tpoints - 1;
+        x = (thread_ID - 1)/tmp;
+        val_tmp = sin (fac * x);
+        /* k = k + 1.0; */
+
+        /* Initialize old values array */
+        old_tmp = val_tmp;
+        for (i = 1; i<= nsteps; i++) 
         {
-            oldval[j] = values[j];
-            values[j] = newval[j];
+            /* Update points along line for this time step */
+            /* global endpoints */
+            if ((thread_ID == 1) || (thread_ID  == tpoints))
+            {
+                new_tmp = 0.0;
+            }
+            else
+            {
+                new_tmp = (2.0 * val_tmp) - old_tmp + (0.09 * (-2.0) * val_tmp );
+            }
+            /* Update old values with new values */
+            old_tmp = val_tmp;
+            val_tmp = new_tmp;
         }
+        /* write back the result */
     }
 }
-
 /**********************************************************************
  *     Print final results
  *********************************************************************/
@@ -156,14 +134,20 @@ int main(int argc, char *argv[])
     sscanf(argv[2],"%d",&nsteps);
     check_param();
 
-    printf("Initializing points on the line...\n");
-
-    init_line();
+    printf("Initializing points on the line...\n");    
     printf("Updating all points for all time steps...\n");
+
+    float cuda_value[tpoints];
+    int size = tpoints * sizeof(float);
+
+    cudaMalloc(cuda_value, size); /* allocate the memory space for cuda computation */
     update();
+    cudaMemcpy(value, cuda_value, size, cudaMemcpyDeviceToHost); /* copy the memory from GPU memory to main memory */
+
+
     printf("Printing final results...\n");
     printfinal();
     printf("\nDone.\n\n");
-
+    cudaFree(cuda_value);
     return 0;
 }
