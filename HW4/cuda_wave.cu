@@ -69,8 +69,8 @@ __global__ void update(float *cuda_value, int nsteps, int tpoints)
 {
     int thread_ID = threadIdx.x + blockIdx.x * blockDim.x; /* the thread index of CUDA core */ 
 
-    int i, j;
-    float x, fac, k, tmp;
+    int i;
+    float x, fac, tmp;
     float old_tmp, new_tmp, val_tmp;
     /* Update values for each time step */
     if(thread_ID < 1 || thread_ID > tpoints)
@@ -86,7 +86,7 @@ __global__ void update(float *cuda_value, int nsteps, int tpoints)
         /* k = 0.0; */ 
         tmp = tpoints - 1;
         x = (thread_ID - 1)/tmp;
-        val_tmp = sin (fac * x);
+        val_tmp = __sin (fac * x); /* CUDA intrinsic function */
         /* k = k + 1.0; */
 
         /* Initialize old values array */
@@ -108,6 +108,7 @@ __global__ void update(float *cuda_value, int nsteps, int tpoints)
             val_tmp = new_tmp;
         }
         /* write back the result */
+        cuda_value[thread_ID] = val_tmp;
     }
 }
 /**********************************************************************
@@ -137,12 +138,12 @@ int main(int argc, char *argv[])
     printf("Initializing points on the line...\n");    
     printf("Updating all points for all time steps...\n");
 
-    float cuda_value[tpoints];
+    float *cuda_value;
     int size = tpoints * sizeof(float);
 
-    cudaMalloc(cuda_value, size); /* allocate the memory space for cuda computation */
+    cudaMalloc((void**)cuda_value, size); /* allocate the memory space for cuda computation */
     update();
-    cudaMemcpy(value, cuda_value, size, cudaMemcpyDeviceToHost); /* copy the memory from GPU memory to main memory */
+    cudaMemcpy(values, cuda_value, size, cudaMemcpyDeviceToHost); /* copy the memory from GPU memory to main memory */
 
 
     printf("Printing final results...\n");
