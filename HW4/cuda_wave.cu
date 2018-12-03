@@ -16,7 +16,6 @@
 #define PI 3.14159265
 #define TILE_WIDTH 1024
 void check_param(void);
-void init_line(void);
 void update (void);
 void printfinal (void);
 
@@ -65,15 +64,15 @@ void check_param(void)
  *  Use each thread for the parallelization of for loop (parallelize the for i (1 to t) tpoints thread)   
  *********************************************************************/
 /* Kernel function is this one */
-__global__ void update(float *cuda_value, int nsteps, int tpoints)
+__global__ void update(float *cuda_value, int tpoints, int nsteps)
 {
-    int thread_ID = threadIdx.x + blockIdx.x * blockDim.x; /* the thread index of CUDA core */ 
+    int thread_ID = threadIdx.x + blockIdx.x * blockDim.x + 1; /* the thread index of CUDA core for loop from 1 */ 
 
     int i;
     float x, fac, tmp;
     float old_tmp, new_tmp, val_tmp;
     /* Update values for each time step */
-    if(thread_ID < 1 || thread_ID > tpoints)
+    if(thread_ID > tpoints)
     {
         return;
     }
@@ -86,22 +85,23 @@ __global__ void update(float *cuda_value, int nsteps, int tpoints)
         /* k = 0.0; */ 
         tmp = tpoints - 1;
         x = (thread_ID - 1)/tmp;
-        val_tmp = __sin (fac * x); /* CUDA intrinsic function */
+        //val_tmp = __sin (fac * x); /* CUDA intrinsic function */
+        val_tmp = sin (fac * x); /* CUDA intrinsic function */
         /* k = k + 1.0; */
 
         /* Initialize old values array */
         old_tmp = val_tmp;
-        for (i = 1; i<= nsteps; i++) 
+        for (i = 1; i <= nsteps; i++) 
         {
             /* Update points along line for this time step */
             /* global endpoints */
             if ((thread_ID == 1) || (thread_ID  == tpoints))
             {
-                new_tmp = 0.0;
+                new_tmp = 0.0f;
             }
             else
             {
-                new_tmp = (2.0 * val_tmp) - old_tmp + (0.09 * (-2.0) * val_tmp );
+                new_tmp = (2.0 * val_tmp) - old_tmp + (0.09 * (-2.0) * val_tmp);
             }
             /* Update old values with new values */
             old_tmp = val_tmp;
@@ -139,16 +139,18 @@ int main(int argc, char *argv[])
     printf("Updating all points for all time steps...\n");
 
     float *cuda_value;
-    int size = tpoints * sizeof(float);
+    int size = (tpoints + 1) * sizeof(float); /* padding */
 
-    cudaMalloc((void**)cuda_value, size); /* allocate the memory space for cuda computation */
-    update();
+    cudaMalloc((void**)&cuda_value, size); /* allocate the memory space for cuda computation */
+    dim3 dimGrid(tpoints / TILE_WIDTH, tpoints / TILE_WIDTH);
+    dim3 dimBlock(TILE_WIDTH, TILE_WIDTH);
+    update<<<(tpoints + TILE_WIDTH)/ TILE_WIDTH, TILE_WIDTH>>>(cuda_value, tpoints, nsteps);
     cudaMemcpy(values, cuda_value, size, cudaMemcpyDeviceToHost); /* copy the memory from GPU memory to main memory */
-
 
     printf("Printing final results...\n");
     printfinal();
     printf("\nDone.\n\n");
     cudaFree(cuda_value);
+
     return 0;
 }

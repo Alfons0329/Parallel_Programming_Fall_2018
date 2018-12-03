@@ -1,11 +1,12 @@
 #!/bin/bash
 set -e
+make clean
 
 make normal
-time ./serial_wave $1 $2 > serial_result.txt
+./serial_wave $1 $2 > serial_result.txt
 
 make cuda
-time ./cuda_wave $1 $2 > cuda_result.txt
+./cuda_wave $1 $2 > cuda_result.txt
 
-cat serial_result.txt | grep real
-cat cuda_result.txt | grep real
+#nvcc cuda_wave_2.cu -o cuda_wave_2
+#time ./cuda_wave_2 $1 $2 > cuda_result.txt
