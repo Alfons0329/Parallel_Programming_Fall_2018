@@ -27,7 +27,7 @@ correctness_test()
     make diff
     time ./serial_wave $1 $2 > serial_result.txt
 
-    time ./cuda_wave $1 $2 1024 > cuda_result.txt
+    time ./cuda_wave $1 $2 > cuda_result.txt
     ./check_diff serial_result.txt cuda_result.txt
 }
 
