@@ -6,6 +6,10 @@ tile_width_test()
     make cuda
     make diff
 
+    echo "--------------Steven------------------"
+    nvcc cuda_wave_2.cu -o cuda_wave_2
+    time ./cuda_wave_2 $1 $2 > cuda_result_2.txt
+
     echo "--------------Mine------------------"
     #2048 wrong answer
     for i in 64 128 256 512 1024;
@@ -14,10 +18,6 @@ tile_width_test()
         time ./cuda_wave $1 $2 $i > cuda_result.txt
         ./check_diff cuda_result.txt cuda_result_2.txt
     done
-
-    echo "--------------Steven------------------"
-    nvcc cuda_wave_2.cu -o cuda_wave_2
-    time ./cuda_wave_2 $1 $2 > cuda_result_2.txt
 }
 
 correctness_test()

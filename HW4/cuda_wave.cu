@@ -16,10 +16,12 @@
 #define PI 3.14159265
 
 int TILE_WIDTH; /*testing purpose, change it to define after finished testing!!*/
+const float FAC = 6.2831925f;/*use for share memory in GPU*/
 
 void check_param(void);
 void update (void);
 void printfinal (void);
+float cuda_sin(float);
 
 int nsteps,                 	/* number of time steps */
     tpoints, 	     		/* total points along string */
@@ -62,6 +64,13 @@ void check_param(void)
 }
 
 /**********************************************************************
+ * CUDA sine function
+ *********************************************************************/
+__host__ __device__ float cuda_sin(float input)
+{
+    return sinf(input);
+}
+/**********************************************************************
  *  Update all values along line a specified number of times
  *  Use each thread for the parallelization of for loop (parallelize the for i (1 to t) tpoints thread)   
  *********************************************************************/
@@ -71,7 +80,11 @@ __global__ void update(float *cuda_value, int tpoints, int nsteps)
     int thread_ID = threadIdx.x + blockIdx.x * blockDim.x + 1; /* the thread index of CUDA core for loop from 1 */ 
 
     int i;
-    float x, fac, tmp;
+    float x;
+    float tmp = tpoints - 1;
+    /* float fac, tmp; */
+    /* __constant__ float fac = 6.2831925f; */
+    
     float old_tmp, new_tmp, val_tmp;
     /* Update values for each time step */
     if(thread_ID > tpoints)
@@ -83,17 +96,16 @@ __global__ void update(float *cuda_value, int tpoints, int nsteps)
         /* init line */
 
         /* Calculate initial values based on sine curve */
-        fac = 2.0 * PI;
+        /* fac = 2.0 * PI; */
         /* k = 0.0; */ 
-        tmp = tpoints - 1;
+        /* tmp = tpoints - 1; */
         x = (thread_ID - 1)/tmp;
-        //val_tmp = __sin (fac * x); /* CUDA intrinsic function */
-        val_tmp = sin (fac * x); /* CUDA intrinsic function */
+        val_tmp = sin(FAC * x); 
         /* k = k + 1.0; */
 
         /* Initialize old values array */
         old_tmp = val_tmp;
-        for (i = 1; i <= nsteps; i++) 
+        for (i = nsteps - 1; i >= 0; i--) 
         {
             /* Update points along line for this time step */
             /* global endpoints */
@@ -104,6 +116,7 @@ __global__ void update(float *cuda_value, int tpoints, int nsteps)
             else
             {
                 new_tmp = (2.0f * val_tmp) - old_tmp + ( (-0.18f) * val_tmp);
+                //new_tmp = (1.82f * val_tmp) - old_tmp; lots of errors but dunno why
             }
             /* Update old values with new values */
             old_tmp = val_tmp;
@@ -113,6 +126,7 @@ __global__ void update(float *cuda_value, int tpoints, int nsteps)
         cuda_value[thread_ID] = val_tmp;
     }
 }
+
 /**********************************************************************
  *     Print final results
  *********************************************************************/
@@ -135,8 +149,8 @@ int main(int argc, char *argv[])
 {
     sscanf(argv[1],"%d",&tpoints);
     sscanf(argv[2],"%d",&nsteps);
-    sscanf(argv[3],"%d",&TILE_WIDTH);
-    //TILE_WIDTH = 1024;
+    //sscanf(argv[3],"%d",&TILE_WIDTH);
+    TILE_WIDTH = 1024;
     check_param();
 
     printf("Initializing points on the line...\n");    
@@ -145,16 +159,17 @@ int main(int argc, char *argv[])
     float *cuda_value;
     int size = (tpoints + 1) * sizeof(float); /* padding */
 
-    cudaMalloc((void**)&cuda_value, size); /* allocate the memory space for cuda computation */
-    //dim3 dimGrid(tpoints / TILE_WIDTH, tpoints / TILE_WIDTH);
-    //dim3 dimBlock(TILE_WIDTH, TILE_WIDTH);
-    update<<<(tpoints + TILE_WIDTH)/ TILE_WIDTH, TILE_WIDTH>>>(cuda_value, tpoints, nsteps);
+    //cudaMalloc((void**)&cuda_value, size); /* allocate the memory space for cuda computation */
+    size_t pitch = 0;
+    cudaMallocPitch((void**)&cuda_value, &pitch, size, 1) ; /* alignment the memory allocation use 1 row for 1d array */
+    /* dim3 dimGrid(tpoints / TILE_WIDTH, tpoints / TILE_WIDTH); */
+    /* dim3 dimBlock(TILE_WIDTH, TILE_WIDTH); */
+    update<<<(tpoints + TILE_WIDTH)/ TILE_WIDTH, TILE_WIDTH>>>(cuda_value, pitch / sizeof(float), nsteps);
     cudaMemcpy(values, cuda_value, size, cudaMemcpyDeviceToHost); /* copy the memory from GPU memory to main memory */
 
     printf("Printing final results...\n");
     printfinal();
     printf("\nDone.\n\n");
     cudaFree(cuda_value);
-
     return 0;
 }
