@@ -40,7 +40,7 @@ int main()
         if(cuda_point[i] != serial_point[i])
         {
             ++diff_cnt;
-            //cout << cuda_point[i] << "  ,  " << serial_point[i] << endl;
+    //        cout << cuda_point[i] << "  ,  " << serial_point[i] << endl;
         }
     }
     printf("Diff is %d in %d points, rate %f \n", diff_cnt, cuda_point.size(), (float) diff_cnt / cuda_point.size());
