@@ -2,22 +2,18 @@
  * DESCRIPTION:
  *   Serial Concurrent Wave Equation - C Version
  *   This program implements the concurrent wave equation
- *   TA machine is GTX1060, so the TILE_WIDTH should be set at 
- *   corresponding to the spec (see L6 p155 or NVIDIA site) 
  *********************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 #include <time.h>
 
 #define MAXPOINTS 1000000
 #define MAXSTEPS 1000000
 #define MINPOINTS 20
 #define PI 3.14159265
-
-int TILE_WIDTH; /*testing purpose, change it to define after finished testing!!*/
-
+#define BLOCKSIZE 128
 void check_param(void);
+void init_line(void);
 void update (void);
 void printfinal (void);
 
@@ -37,8 +33,7 @@ void check_param(void)
     char tchar[20];
 
     /* check number of points, number of iterations */
-    while ((tpoints < MINPOINTS) || (tpoints > MAXPOINTS)) 
-    {
+    while ((tpoints < MINPOINTS) || (tpoints > MAXPOINTS)) {
         printf("Enter number of points along vibrating string [%d-%d]: "
                 ,MINPOINTS, MAXPOINTS);
         scanf("%s", tchar);
@@ -47,9 +42,7 @@ void check_param(void)
             printf("Invalid. Please enter value between %d and %d\n", 
                     MINPOINTS, MAXPOINTS);
     }
-
-    while ((nsteps < 1) || (nsteps > MAXSTEPS)) 
-    {
+    while ((nsteps < 1) || (nsteps > MAXSTEPS)) {
         printf("Enter number of time steps [1-%d]: ", MAXSTEPS);
         scanf("%s", tchar);
         nsteps = atoi(tchar);
@@ -61,56 +54,40 @@ void check_param(void)
 
 }
 
+
+
+
 /**********************************************************************
- *  Update all values along line a specified number of times
- *  Use each thread for the parallelization of for loop (parallelize the for i (1 to t) tpoints thread)   
+ *     Update all values along line a specified number of times
  *********************************************************************/
-/* Kernel function is this one */
-__global__ void update(float *cuda_value, int tpoints, int nsteps)
+
+
+__global__ void update (float *values_d, int tpoints,  int nsteps)
 {
-    int thread_ID = threadIdx.x + blockIdx.x * blockDim.x + 1; /* the thread index of CUDA core for loop from 1 */ 
-
     int i;
-    float x, fac, tmp;
-    float old_tmp, new_tmp, val_tmp;
-    /* Update values for each time step */
-    if(thread_ID > tpoints)
-    {
-        return;
-    }
-    else
-    {
-        /* init line */
+    int k =  1+threadIdx.x + blockIdx.x * blockDim.x;
+    if(k <= tpoints){
+        float values_t;
+        float newval_t;
+        float oldval_t;
 
-        /* Calculate initial values based on sine curve */
+        float x, fac , tmp ; 
         fac = 2.0 * PI;
-        /* k = 0.0; */ 
         tmp = tpoints - 1;
-        x = (thread_ID - 1)/tmp;
-        //val_tmp = __sin (fac * x); /* CUDA intrinsic function */
-        val_tmp = sin (fac * x); /* CUDA intrinsic function */
-        /* k = k + 1.0; */
+        x = (float)(k-1)/tmp ;
+        values_t = sin(fac * x);
+        oldval_t = values_t;
 
-        /* Initialize old values array */
-        old_tmp = val_tmp;
-        for (i = 1; i <= nsteps; i++) 
-        {
-            /* Update points along line for this time step */
-            /* global endpoints */
-            if ((thread_ID == 1) || (thread_ID  == tpoints))
-            {
-                new_tmp = 0.0f;
-            }
+        for (i = 1; i <= nsteps ; i++) {
+            if ((k == 1) || (k == tpoints ))
+                newval_t = 0.0f;
             else
-            {
-                new_tmp = (2.0f * val_tmp) - old_tmp + ( (-0.18f) * val_tmp);
-            }
-            /* Update old values with new values */
-            old_tmp = val_tmp;
-            val_tmp = new_tmp;
+                newval_t = (2.0f * values_t) - oldval_t + ( 0.09f * ( -2.0f * values_t ));
+            oldval_t = values_t;
+            values_t = newval_t;
         }
-        /* write back the result */
-        cuda_value[thread_ID] = val_tmp;
+
+        values_d[k] = values_t;
     }
 }
 /**********************************************************************
@@ -120,8 +97,7 @@ void printfinal()
 {
     int i;
 
-    for (i = 1; i <= tpoints; i++) 
-    {
+    for (i = 1; i <= tpoints; i++) {
         printf("%6.4f ", values[i]);
         if (i%10 == 0)
             printf("\n");
@@ -135,26 +111,18 @@ int main(int argc, char *argv[])
 {
     sscanf(argv[1],"%d",&tpoints);
     sscanf(argv[2],"%d",&nsteps);
-    sscanf(argv[3],"%d",&TILE_WIDTH);
-    //TILE_WIDTH = 1024;
     check_param();
-
-    printf("Initializing points on the line...\n");    
+    printf("Initializing points on the line...\n");
     printf("Updating all points for all time steps...\n");
-
-    float *cuda_value;
-    int size = (tpoints + 1) * sizeof(float); /* padding */
-
-    cudaMalloc((void**)&cuda_value, size); /* allocate the memory space for cuda computation */
-    //dim3 dimGrid(tpoints / TILE_WIDTH, tpoints / TILE_WIDTH);
-    //dim3 dimBlock(TILE_WIDTH, TILE_WIDTH);
-    update<<<(tpoints + TILE_WIDTH)/ TILE_WIDTH, TILE_WIDTH>>>(cuda_value, tpoints, nsteps);
-    cudaMemcpy(values, cuda_value, size, cudaMemcpyDeviceToHost); /* copy the memory from GPU memory to main memory */
-
+    float *values_d;
+    int size = (1+tpoints)*sizeof(float);
+    cudaMalloc((void**)&values_d,size);
+    update<<<(tpoints+BLOCKSIZE-1)/BLOCKSIZE, BLOCKSIZE>>>(values_d, tpoints, nsteps);
+    cudaMemcpy(values, values_d, size, cudaMemcpyDeviceToHost);
     printf("Printing final results...\n");
     printfinal();
     printf("\nDone.\n\n");
-    cudaFree(cuda_value);
+    cudaFree(values_d);
 
     return 0;
 }

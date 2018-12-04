@@ -4,20 +4,20 @@ set -e
 tile_width_test()
 {
     make cuda
-
-    echo "--------------Steven------------------"
-    nvcc cuda_wave_2.cu -o cuda_wave_2
-    time ./cuda_wave_2 $1 $2 > cuda_result_2.txt
+    make diff
 
     echo "--------------Mine------------------"
     #2048 wrong answer
-    for i in 64 128 256 512 1024 2048;
+    for i in 64 128 256 512 1024;
     do
         echo "TILE_WIDTH " $i
         time ./cuda_wave $1 $2 $i > cuda_result.txt
         ./check_diff cuda_result.txt cuda_result_2.txt
     done
 
+    echo "--------------Steven------------------"
+    nvcc cuda_wave_2.cu -o cuda_wave_2
+    time ./cuda_wave_2 $1 $2 > cuda_result_2.txt
 }
 
 correctness_test()
