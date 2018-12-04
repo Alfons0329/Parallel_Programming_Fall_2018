@@ -3,14 +3,23 @@
 using namespace std;
 
 
-int main()
+int main(int argc, char* argv[])
 {
     ifstream serial;
     ifstream cuda;
 
-    serial.open("serial_result.txt");
-    cuda.open("cuda_result.txt");
+    string agv1(argv[1]);
+    string agv2(argv[2]);
 
+    cout << "agv1 = " << agv1 << " , agv2 = " << agv2 << endl;
+    serial.open(agv1.c_str());
+    cuda.open(agv2.c_str());
+
+    if(!serial.is_open() || !cuda.is_open())
+    {
+        printf("fopen failed!!! \n");
+        return 1;
+    }
     vector<string> serial_point;
     vector<string> cuda_point;
 
@@ -40,7 +49,7 @@ int main()
         if(cuda_point[i] != serial_point[i])
         {
             ++diff_cnt;
-    //        cout << cuda_point[i] << "  ,  " << serial_point[i] << endl;
+            //cout << cuda_point[i] << "  ,  " << serial_point[i] << endl;
         }
     }
     printf("Diff is %d in %d points, rate %f \n", diff_cnt, cuda_point.size(), (float) diff_cnt / cuda_point.size());
