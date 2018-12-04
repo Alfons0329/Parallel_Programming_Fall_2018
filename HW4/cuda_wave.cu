@@ -159,12 +159,11 @@ int main(int argc, char *argv[])
     float *cuda_value;
     int size = (tpoints + 1) * sizeof(float); /* padding */
 
-    //cudaMalloc((void**)&cuda_value, size); /* allocate the memory space for cuda computation */
-    size_t pitch = 0;
-    cudaMallocPitch((void**)&cuda_value, &pitch, size, 1) ; /* alignment the memory allocation use 1 row for 1d array */
+    cudaMalloc((void**)&cuda_value, size); /* allocate the memory space for cuda computation */
+    //cudaMallocPitch((void**)&cuda_value, &pitch, size, 1) ; /* alignment the memory allocation use 1 row for 1d array */
     /* dim3 dimGrid(tpoints / TILE_WIDTH, tpoints / TILE_WIDTH); */
     /* dim3 dimBlock(TILE_WIDTH, TILE_WIDTH); */
-    update<<<(tpoints + TILE_WIDTH)/ TILE_WIDTH, TILE_WIDTH>>>(cuda_value, pitch / sizeof(float), nsteps);
+    update<<<(tpoints + TILE_WIDTH)/ TILE_WIDTH, TILE_WIDTH>>>(cuda_value, tpoints, nsteps);
     cudaMemcpy(values, cuda_value, size, cudaMemcpyDeviceToHost); /* copy the memory from GPU memory to main memory */
 
     printf("Printing final results...\n");
