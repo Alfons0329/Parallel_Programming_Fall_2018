@@ -14,7 +14,9 @@
 #define MAXSTEPS 1000000
 #define MINPOINTS 20
 #define PI 3.14159265
-#define TILE_WIDTH 1024
+
+int TILE_WIDTH; /*testing purpose, change it to define after finished testing!!*/
+
 void check_param(void);
 void update (void);
 void printfinal (void);
@@ -133,6 +135,7 @@ int main(int argc, char *argv[])
 {
     sscanf(argv[1],"%d",&tpoints);
     sscanf(argv[2],"%d",&nsteps);
+    sscanf(argv[3],"%d",&TILE_WIDTH);
     check_param();
 
     printf("Initializing points on the line...\n");    
