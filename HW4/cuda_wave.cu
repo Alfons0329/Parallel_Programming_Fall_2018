@@ -135,7 +135,8 @@ int main(int argc, char *argv[])
 {
     sscanf(argv[1],"%d",&tpoints);
     sscanf(argv[2],"%d",&nsteps);
-    sscanf(argv[3],"%d",&TILE_WIDTH);
+    //sscanf(argv[3],"%d",&TILE_WIDTH);
+    TILE_WIDTH = 1024;
     check_param();
 
     printf("Initializing points on the line...\n");    
