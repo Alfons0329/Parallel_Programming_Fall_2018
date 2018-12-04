@@ -1,15 +1,18 @@
 #!/bin/bash
 set -e
-make clean
 
-#make normal
-#time ./serial_wave $1 $2 > serial_result.txt
+make normal
+time ./serial_wave $1 $2 > serial_result.txt
 
+#2048 wrong answer
 make cuda
-for i in 64 128 256 512 1024 2048;
+make diff
+for i in 64 128 256 512 1024 ;
 do
-    echo "TILE_WIDTH" $i
+    echo "TILE_WIDTH " $i
     time ./cuda_wave $1 $2 $i > cuda_result.txt
+
+    ./check_diff
 done
 
 #nvcc cuda_wave_2.cu -o cuda_wave_2
