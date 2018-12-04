@@ -19,7 +19,7 @@ cuda: cuda_wave.cu
 	$(NVCC) $(SOURCE2) -o $(TARGET2) $(LIBS)
 
 diff: check_diff.cpp
-	$(CPP) $(DIFF) -o $(TARGET3) 
+	$(CPP) $(DIFF) -o $(TARGET3) -std=c++11 
 .PHONY: clean
 
 clean:
