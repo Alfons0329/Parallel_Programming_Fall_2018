@@ -10,7 +10,8 @@ int main(int argc, char* argv[])
 
     string agv1(argv[1]);
     string agv2(argv[2]);
-
+    string::size_type sz;     // alias of size_t
+    
     cout << "agv1 = " << agv1 << " , agv2 = " << agv2 << endl;
     serial.open(agv1.c_str());
     cuda.open(agv2.c_str());
@@ -20,8 +21,8 @@ int main(int argc, char* argv[])
         printf("fopen failed!!! \n");
         return 1;
     }
-    vector<string> serial_point;
-    vector<string> cuda_point;
+    vector<float> serial_point;
+    vector<float> cuda_point;
 
     int cnt = 0;
     string str;
@@ -30,7 +31,7 @@ int main(int argc, char* argv[])
         ++cnt;
         if(cnt >= 22)
         {
-            serial_point.push_back(str);
+            serial_point.push_back(atof(str.c_str()));
         }
     }
     cnt = 0;
@@ -39,14 +40,14 @@ int main(int argc, char* argv[])
         ++cnt;
         if(cnt >= 22)
         {
-            cuda_point.push_back(str);
+            cuda_point.push_back(atof(str.c_str()));
         }
     }
 
     int diff_cnt = 0;
     for (int i = 0; i < cuda_point.size(); ++i)
     {
-        if(cuda_point[i] != serial_point[i])
+        if(abs(cuda_point[i] - serial_point[i]) >= 0.01f)
         {
             ++diff_cnt;
             //cout << cuda_point[i] << "  ,  " << serial_point[i] << endl;
