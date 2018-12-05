@@ -1,13 +1,17 @@
 # Parallel Programming HW1: Calculating Pi using Monte Carlo Method
 
-## Execution of the main program
+## Build and run
 
-* Accelerte with pthread library
-* git clone this repository
-* 
-```
-cd HW1
-```
+* Accelerte with pthread library, make sure pthread (POSIX thread is runable on your computer, mine is Ubuntu16.04)
+* Check if pthread is installed in your UNIX-like system
+    ```sh
+    $ locate libpthread.so      
+    # should return the message like the following
+    /lib/i386-linux-gnu/libpthread.so.0
+    /lib/x86_64-linux-gnu/libpthread.so.0
+    /lib32/libpthread.so.0
+    /usr/lib/x86_64-linux-gnu/libpthread.so
+    ```
 * Run the program(makefile included), see the speed up percentage.
 ```sh
 ./run.sh $threads $tossed_times $testing_times
