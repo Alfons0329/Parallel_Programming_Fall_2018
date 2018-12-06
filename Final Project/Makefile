@@ -51,4 +51,6 @@ matrix: create_matrix.cpp
 	$(CPP) $(SOURCE_CM) -o $(TARGET_CM) $(CPP_FLAGS)
 
 .PHONY: clean
+
+clean:
 	rm -f *.o
