@@ -1,22 +1,54 @@
-TARGET=gb_pthread.o
-SOURCE=gaussian_blur_pthread.cpp
+#---------------------------Required files-----------------------#
+#Standard Gaussian blur (serial version)
+TARGET=gb_std.o
+SOURCE=gaussian_blur_standard.cpp
 
-TARGET2=gb_std.o
-SOURCE2=gaussian_blur_standard.cpp
+#Pthread Gaussian blur
+TARGET2=gb_pthread.o
+SOURCE2=gaussian_blur_pthread.cpp
 
-TARGET3=cm.o
-SOURCE3=create_matrix.cpp
+#OpenMP Gaussian blur
+TARGET3=gb_omp.o
+SOURCE3=gaussian_blur_omp.cpp
 
-LIBS=-pthread -lm
+#CUDA Gaussian blur
+TARGET4=gb_cuda.o
+SOURCE4=gaussian_blur_cuda.cu
+
+#Gaussian matrix generator
+TARGET_CM=cm.o
+SOURCE_CM=create_matrix.cpp
+
+#------------------------Compiler and flag-----------------------#
+#Compilers
 CPP=g++
-CPP_FLAGS=-std=c++11 -O2 -Wno-unused-result
+#MPICC=mpicc
+#NVCC=nvcc
+#LIBS and FLAGS
+PTHREAD_LIBS=-pthread 
+OTHER_LINS=-lm
+CPP_FLAGS=-std=c++11 -Wno-unused-result
 
-all: gaussian_blur_standard.cpp
-	# $(CPP) $(SOURCE) -o $(TARGET) $(CPP_FLAGS) $(LIBS)
+#---------------------------Rules-------------------------------#
+#Rules for standard Gaussian blur (serial version)
+standard: gaussian_blur_standard.cpp
+	$(CPP) $(SOURCE) -o $(TARGET) $(CPP_FLAGS) $(LIBS)
+
+#Rules for pthread Gaussian blur
+pthread: gaussian_blur_pthread.cpp
 	$(CPP) $(SOURCE2) -o $(TARGET2) $(CPP_FLAGS) $(LIBS)
+	
+#Rules for OpenMp Gaussian blur
+omp: gaussian_blur_omp.cpp
+	$(MPICC) $(SOURCE3) -o $(TARGET3) $(CPP_FLAGS) $(LIBS)
 
+#Rules for CUDA Gaussian blur
+cuda: gaussian_blur_cuda.cu
+	$(NVCC) $(SOURCE4) -o $(TARGET4) $(CPP_FLAGS) $(LIBS)
+
+#Rules for Gaussian matrix generator
 matrix: create_matrix.cpp
-	$(CPP) $(SOURCE3) -o $(TARGET3) $(CPP_FLAGS)
+	$(CPP) $(SOURCE_CM) -o $(TARGET_CM) $(CPP_FLAGS)
 
 .PHONY: clean
 	rm -f *.o
