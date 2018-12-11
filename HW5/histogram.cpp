@@ -10,6 +10,12 @@
  * 0xRRGGBB and the R_stat[RR]++; G_stat[GG]++; B_stat[BB]++;, after the iterations
  * the result can be shown as an image histogram
  * **********************************************************************************************************/
+
+/* OpenCL kernel function 
+ * __kernel
+ *
+ * */
+
 unsigned int * histogram(unsigned char *image_data, unsigned int _size) {
 
     unsigned char *img = image_data;
@@ -42,45 +48,57 @@ unsigned int * histogram(unsigned char *image_data, unsigned int _size) {
         unsigned int index = img[i];
         ptr[index]++;
     }
-    
+
     return ref_histogram_results;
 }
 
 int main(int argc, char const *argv[])
 {
     // OpenCL init starts here
-    cl_int cl_err_num;
-    cl_uint num_device;
+    cl_int cl_err, cl_err2, cl_err3, cl_err4; // return value of CL functions, check whether OpenCL platform errors
+    cl_uint num_device, num_plat;
     cl_device_id device_id;
-    cl_platform_id plat_pd;
+    cl_platform_id plat_id;
+    cl_context ctx;
+    cl_command_queue que;
+
+    // num_entries = 1 for 1 GPU card
+    cl_err = clGetPlatformIDs(1, &plat_id, &num_plat); // get platform id and number
+    cl_err2 = clGetDeviceIDs(plat_id, CL_DEVICE_TYPE_GPU, 1, &device_id,  &num_device);
+    ctx = clCreateContext(NULL, 1, &device_id, NULL, NULL, &cl_err3);
+    que = clCreateCommandQueue(ctx, device_id, 0, &cl_err4);
+    
+    if (cl_err == CL_SUCCESS && cl_err2 == CL_SUCCESS && cl_err3 == CL_SUCCESS && cl_err4 == CL_SUCCESS)
+    {
+        printf("CL platform init OK \n");
+    }
+    else
+    {
+        printf("CL platform init failed \n");
+        return 1;
+    }
 
     // OpenCL init ends here
-    
+
     // Input size and required variables starts here
     unsigned char* image; // For input image 
     unsigned int* histogram_results; // For output result
     unsigned int i = 0, a, input_size;
 
-    // Input size and required variables ends here
-    // Use traditional C FILE IO will be faster for performance
-    // std::fstream inFile("input", std::ios_base::in);
-    // std::ofstream outFile("xxxxxx.out", std::ios_base::out);
-    
-    // Traditional C FILE IO starts here
-    // REMEMBER TO CHANGE BACK TO INPUT BEFORE
     FILE* inFile = fopen("input", "r");
     FILE* outFile = fopen("0416324.out", "w");
     fscanf(inFile, "%u", &input_size);
 
     // Allocate memory starts here
-    
+
     // OpenCL memory allocation starts here
+    
     // OpenCL memory allocation ends here
-    
-    
+
     image = (unsigned char* ) malloc (sizeof(unsigned char) * input_size);//R, G, B ranging from 0x00 to 0xFF
     histogram_results = (unsigned int* ) malloc (sizeof(unsigned int) * 256 * 3);//R 256, G 256, B 256, total 768 statistical data
     // Allocate memory ends here
+
     while(fscanf(inFile, "%u", &a) != EOF)
     {
         image[i++] = a;
