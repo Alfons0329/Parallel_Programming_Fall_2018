@@ -1,24 +1,20 @@
-# Parallel Programming HW4 - CUDA
+# Parallel Programming HW4: CUDA
 
-## The statistics of error diffs
-* 
+## Build, run, and validate for correctness
+* Build the serial(CPU) version of wave euqation
+    ```sh
+    make normal
     ```
-    new_tmp = (2.0 * val_tmp) - old_tmp + ( (-0.09 * 2.0) * val_tmp);
+* Build the CUDA(GPU) version of wave euqation
+    ```sh
+    make cuda
+    ``` 
+* Build the diff checker (check_diff.cpp) for validate the error rate (abs (serial_point - cuda_point) > 1e-2) is count as error.
+    ```sh
+    make diff
     ```
-    diff is 2034 in 10000 pts
-*
+* Or use the run.sh to do all the tings
+    ```sh
+    ./run.sh $tpoints $nsteps 1
     ```
-    new_tmp = (2.0 * val_tmp) - old_tmp + ( (-0.18) * val_tmp);
-    ```
-    diff is 2034 in 10000 pts
-*
-    ```
-    new_tmp = (2.0f * val_tmp) - old_tmp + ( (-0.18f) * val_tmp);
-    ```
-    diff is 206 in 10000 pts
 
-*
-    ```
-    new_tmp = (1.82f * val_tmp) - old_tmp;
-    ```
-    diff is 8799 in 10000 pts
