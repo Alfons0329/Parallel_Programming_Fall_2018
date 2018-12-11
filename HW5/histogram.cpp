@@ -12,18 +12,17 @@
  * **********************************************************************************************************/
 
 /* OpenCL kernel function 
- __kernel void histogram(__global unsigned char* image_data, __global unsigned int* result_data, unsigned int size)
- {
-    int idx = get_global_id(0);
-    if(idx > size - 2) 
+    __kernel void histogram(__global unsigned char* image_data, __global unsigned int* result_data, unsigned int size)
     {
-        return;
+        int idx = get_global_id(0);
+        if(idx > size - 2) 
+        {
+            return;
+        }
+        result_data[idx] = image_data[idx];
+        result_data[idx + 1] = image_data[idx + 1];
+        result_data[idx + 2] = image_data[idx + 2];
     }
-
-    result_data[idx] = image_data[idx];
-    result_data[idx + 1] = image_data[idx + 1];
-    result_data[idx + 2] = image_data[idx + 2];
- }
  *
  * */
 
@@ -64,8 +63,29 @@ unsigned int * histogram(unsigned char *image_data, unsigned int _size) {
 }
 
 int main(int argc, char const *argv[])
-{
-    // OpenCL init starts here
+{    
+    //--------------------Input size and required variables----//
+    unsigned char* image; // For input image 
+    unsigned int* histogram_results; // For output result
+    unsigned int i = 0, a, input_size;
+    
+    //----------------------Allocate memory--------------------//
+    image = (unsigned char* ) malloc (sizeof(unsigned char) * input_size);// R, G, B ranging from 0x00 to 0xFF
+    histogram_results = (unsigned int* ) malloc (sizeof(unsigned int) * 256 * 3);// R 256, G 256, B 256, total 768 statistical data
+
+    //--------------------File IO------------------------------//
+    FILE* inFile = fopen("input", "r");
+    FILE* outFile = fopen("0416324.out", "w");
+    fscanf(inFile, "%u", &input_size);
+
+    while(fscanf(inFile, "%u", &a) != EOF)
+    {
+        image[i++] = a;
+    }
+    i = 0;
+    memset(histogram_results, 0, sizeof(histogram_results));
+
+    //-----------------------OpenCL init-----------------------//
     cl_int cl_err, cl_err2, cl_err3, cl_err4; // return value of CL functions, check whether OpenCL platform errors
     cl_uint num_device, num_plat;
     cl_device_id device_id;
@@ -78,7 +98,7 @@ int main(int argc, char const *argv[])
     cl_err2 = clGetDeviceIDs(plat_id, CL_DEVICE_TYPE_GPU, 1, &device_id,  &num_device);
     ctx = clCreateContext(NULL, 1, &device_id, NULL, NULL, &cl_err3);
     que = clCreateCommandQueue(ctx, device_id, 0, &cl_err4);
-    
+
     if (cl_err == CL_SUCCESS && cl_err2 == CL_SUCCESS && cl_err3 == CL_SUCCESS && cl_err4 == CL_SUCCESS)
     {
         printf("CL platform init OK \n");
@@ -88,33 +108,10 @@ int main(int argc, char const *argv[])
         printf("CL platform init failed \n");
         return 1;
     }
-    // OpenCL init ends here
 
-    // Input size and required variables starts here
-    unsigned char* image; // For input image 
-    unsigned int* histogram_results; // For output result
-    unsigned int i = 0, a, input_size;
-
-    // File IO starts here
-    FILE* inFile = fopen("input", "r");
-    FILE* outFile = fopen("0416324.out", "w");
-    fscanf(inFile, "%u", &input_size);
-    
-    // Allocate memory starts here
-    image = (unsigned char* ) malloc (sizeof(unsigned char) * input_size);//R, G, B ranging from 0x00 to 0xFF
-    histogram_results = (unsigned int* ) malloc (sizeof(unsigned int) * 256 * 3);//R 256, G 256, B 256, total 768 statistical data
-    // Allocate memory ends here
-
-    while(fscanf(inFile, "%u", &a) != EOF)
-    {
-        image[i++] = a;
-    }
-    // File IO ends here
-
-
-    // OpenCL memory allocation starts here
-    cl_mem img_in = clCreateBuffer(ctx, CL_MEM_READ_ONLY, sizeof(unsigned char) * input_size, NULL, cl_err); // Allocate mem space for input image
-    cl_mem his_out = clCreateBuffer(ctx, CL_MEM_WRITE_ONLY, sizeof(unsigned int) * 3 * 256, NULL, cl_err2); // Allocate mem space for input image
+    //----------------------OpenCL memory allocation-----------//
+    cl_mem img_cl = clCreateBuffer(ctx, CL_MEM_READ_ONLY, sizeof(unsigned char) * input_size, NULL, &cl_err); // Allocate mem space for input image
+    cl_mem his_cl = clCreateBuffer(ctx, CL_MEM_WRITE_ONLY, sizeof(unsigned int) * 256 * 3, NULL, &cl_err2); // Allocate mem space for input image
     if (cl_err == CL_SUCCESS && cl_err2 == CL_SUCCESS)
     {
         printf("CL memory allocation OK\n");
@@ -124,7 +121,23 @@ int main(int argc, char const *argv[])
         printf("CL memory allocation failed\n");
         return 1;
     }
-    // OpenCL memory allocation ends here
+    //--------------------Memory from host to device--------------//
+    printf("OK \n");
+    cl_err = clEnqueueWriteBuffer(que, img_cl, CL_TRUE, 0, sizeof(unsigned char) * input_size, image, 0, NULL, NULL); // Input image from host to device
+    printf("OK 2\n");
+    cl_err2 = clEnqueueWriteBuffer(que, his_cl, CL_TRUE, 0, sizeof(unsigned int) * 256 * 3, histogram_results, 0, NULL, NULL); // Histogram result from host to device
+    printf("OK 3\n");
+    if (cl_err == CL_SUCCESS && cl_err2 == CL_SUCCESS)
+    {
+        printf("CL memory enqueueing OK\n");
+    }
+    else
+    {
+        printf("CL memory enqueueing failed\n");
+        return 1;
+    }
+
+    memset(histogram_results, 0, sizeof(unsigned int) * 256 * 3);
     histogram_results = histogram(image, input_size);
     for(unsigned int i = 0; i < 256 * 3; ++i) 
     {
@@ -134,7 +147,6 @@ int main(int argc, char const *argv[])
         }
         fprintf(outFile, "%u ", histogram_results[i]);
     }
-
     fclose(inFile);
     fclose(outFile);
     return 0;
