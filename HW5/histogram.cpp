@@ -42,7 +42,7 @@ unsigned int * histogram(unsigned char *image_data, unsigned int _size) {
         unsigned int index = img[i];
         ptr[index]++;
     }
-
+    
     return ref_histogram_results;
 }
 
@@ -67,6 +67,7 @@ int main(int argc, char const *argv[])
     // std::ofstream outFile("xxxxxx.out", std::ios_base::out);
     
     // Traditional C FILE IO starts here
+    // REMEMBER TO CHANGE BACK TO INPUT BEFORE
     FILE* inFile = fopen("input", "r");
     FILE* outFile = fopen("0416324.out", "w");
     fscanf(inFile, "%u", &input_size);
@@ -86,14 +87,13 @@ int main(int argc, char const *argv[])
     }
     // Traditional C FILE IO ends here
     histogram_results = histogram(image, input_size);
-    
     for(unsigned int i = 0; i < 256 * 3; ++i) 
     {
         if (i % 256 == 0 && i != 0)
         {
             fprintf(outFile, "\n");
         }
-        fprintf(outFile, "%u", histogram_results[i]);
+        fprintf(outFile, "%u ", histogram_results[i]);
     }
 
     fclose(inFile);
