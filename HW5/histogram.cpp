@@ -12,7 +12,18 @@
  * **********************************************************************************************************/
 
 /* OpenCL kernel function 
- * __kernel
+ __kernel void histogram(__global unsigned char* image_data, __global unsigned int* result_data, unsigned int size)
+ {
+    int idx = get_global_id(0);
+    if(idx > size - 2) 
+    {
+        return;
+    }
+
+    result_data[idx] = image_data[idx];
+    result_data[idx + 1] = image_data[idx + 1];
+    result_data[idx + 2] = image_data[idx + 2];
+ }
  *
  * */
 
@@ -77,7 +88,6 @@ int main(int argc, char const *argv[])
         printf("CL platform init failed \n");
         return 1;
     }
-
     // OpenCL init ends here
 
     // Input size and required variables starts here
@@ -85,16 +95,12 @@ int main(int argc, char const *argv[])
     unsigned int* histogram_results; // For output result
     unsigned int i = 0, a, input_size;
 
+    // File IO starts here
     FILE* inFile = fopen("input", "r");
     FILE* outFile = fopen("0416324.out", "w");
     fscanf(inFile, "%u", &input_size);
-
-    // Allocate memory starts here
-
-    // OpenCL memory allocation starts here
     
-    // OpenCL memory allocation ends here
-
+    // Allocate memory starts here
     image = (unsigned char* ) malloc (sizeof(unsigned char) * input_size);//R, G, B ranging from 0x00 to 0xFF
     histogram_results = (unsigned int* ) malloc (sizeof(unsigned int) * 256 * 3);//R 256, G 256, B 256, total 768 statistical data
     // Allocate memory ends here
@@ -103,7 +109,22 @@ int main(int argc, char const *argv[])
     {
         image[i++] = a;
     }
-    // Traditional C FILE IO ends here
+    // File IO ends here
+
+
+    // OpenCL memory allocation starts here
+    cl_mem img_in = clCreateBuffer(ctx, CL_MEM_READ_ONLY, sizeof(unsigned char) * input_size, NULL, cl_err); // Allocate mem space for input image
+    cl_mem his_out = clCreateBuffer(ctx, CL_MEM_WRITE_ONLY, sizeof(unsigned int) * 3 * 256, NULL, cl_err2); // Allocate mem space for input image
+    if (cl_err == CL_SUCCESS && cl_err2 == CL_SUCCESS)
+    {
+        printf("CL memory allocation OK\n");
+    }
+    else
+    {
+        printf("CL memory allocation failed\n");
+        return 1;
+    }
+    // OpenCL memory allocation ends here
     histogram_results = histogram(image, input_size);
     for(unsigned int i = 0; i < 256 * 3; ++i) 
     {
