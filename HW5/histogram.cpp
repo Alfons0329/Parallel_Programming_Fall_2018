@@ -69,15 +69,15 @@ int main(int argc, char const *argv[])
     unsigned int* histogram_results; // For output result
     unsigned int i = 0, a, input_size;
     
-    //--------------------file IO------------------------------//
+    //--------------------file IO and allocate memory-----------//
     FILE* inFile = fopen("input", "r");
     FILE* outFile = fopen("0416324.out", "w");
     fscanf(inFile, "%u", &input_size);
     
-    //----------------------allocate memory--------------------//
     image = (unsigned char* ) malloc (sizeof(unsigned char) * input_size);// R, G, B ranging from 0x00 to 0xFF
     histogram_results = (unsigned int* ) malloc (sizeof(unsigned int) * 256 * 3);// R 256, G 256, B 256, total 768 statistical data
     memset(histogram_results, 0, sizeof(sizeof(unsigned int) * 256 * 3));
+
     while(fscanf(inFile, "%u", &a) != EOF)
     {
         image[i++] = a;
@@ -132,7 +132,8 @@ int main(int argc, char const *argv[])
         printf("CL memory enqueueing failed\n");
         return 1;
     }
-
+    
+    //-------------------kernel program execution-----------------//
     histogram_results = histogram(image, input_size);
     for(unsigned int i = 0; i < 256 * 3; ++i) 
     {
