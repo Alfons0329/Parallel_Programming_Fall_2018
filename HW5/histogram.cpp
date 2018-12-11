@@ -35,7 +35,7 @@ unsigned int * histogram(unsigned char *image_data, unsigned int _size) {
     ref_histogram_results = (unsigned int *)malloc(256 * 3 * sizeof(unsigned int));
     ptr = ref_histogram_results;
     memset (ref_histogram_results, 0x0, 256 * 3 * sizeof(unsigned int));
-    // Data encoded with R G B R G B R G B...
+    // data encoded with R G B R G B R G B...
     // histogram of R
     for (unsigned int i = 0; i < _size; i += 3)
     {
@@ -64,26 +64,25 @@ unsigned int * histogram(unsigned char *image_data, unsigned int _size) {
 
 int main(int argc, char const *argv[])
 {    
-    //--------------------Input size and required variables----//
+    //--------------------input size and required variables----//
     unsigned char* image; // For input image 
     unsigned int* histogram_results; // For output result
     unsigned int i = 0, a, input_size;
     
-    //----------------------Allocate memory--------------------//
-    image = (unsigned char* ) malloc (sizeof(unsigned char) * input_size);// R, G, B ranging from 0x00 to 0xFF
-    histogram_results = (unsigned int* ) malloc (sizeof(unsigned int) * 256 * 3);// R 256, G 256, B 256, total 768 statistical data
-
-    //--------------------File IO------------------------------//
+    //--------------------file IO------------------------------//
     FILE* inFile = fopen("input", "r");
     FILE* outFile = fopen("0416324.out", "w");
     fscanf(inFile, "%u", &input_size);
-
+    
+    //----------------------allocate memory--------------------//
+    image = (unsigned char* ) malloc (sizeof(unsigned char) * input_size);// R, G, B ranging from 0x00 to 0xFF
+    histogram_results = (unsigned int* ) malloc (sizeof(unsigned int) * 256 * 3);// R 256, G 256, B 256, total 768 statistical data
+    memset(histogram_results, 0, sizeof(sizeof(unsigned int) * 256 * 3));
     while(fscanf(inFile, "%u", &a) != EOF)
     {
         image[i++] = a;
     }
     i = 0;
-    memset(histogram_results, 0, sizeof(histogram_results));
 
     //-----------------------OpenCL init-----------------------//
     cl_int cl_err, cl_err2, cl_err3, cl_err4; // return value of CL functions, check whether OpenCL platform errors
@@ -110,8 +109,8 @@ int main(int argc, char const *argv[])
     }
 
     //----------------------OpenCL memory allocation-----------//
-    cl_mem img_cl = clCreateBuffer(ctx, CL_MEM_READ_ONLY, sizeof(unsigned char) * input_size, NULL, &cl_err); // Allocate mem space for input image
-    cl_mem his_cl = clCreateBuffer(ctx, CL_MEM_WRITE_ONLY, sizeof(unsigned int) * 256 * 3, NULL, &cl_err2); // Allocate mem space for input image
+    cl_mem img_cl = clCreateBuffer(ctx, CL_MEM_READ_ONLY, sizeof(unsigned char) * input_size, NULL, &cl_err); // allocate mem space for input image
+    cl_mem his_cl = clCreateBuffer(ctx, CL_MEM_WRITE_ONLY, sizeof(unsigned int) * 256 * 3, NULL, &cl_err2); // allocate mem space for input image
     if (cl_err == CL_SUCCESS && cl_err2 == CL_SUCCESS)
     {
         printf("CL memory allocation OK\n");
@@ -121,12 +120,9 @@ int main(int argc, char const *argv[])
         printf("CL memory allocation failed\n");
         return 1;
     }
-    //--------------------Memory from host to device--------------//
-    printf("OK \n");
-    cl_err = clEnqueueWriteBuffer(que, img_cl, CL_TRUE, 0, sizeof(unsigned char) * input_size, image, 0, NULL, NULL); // Input image from host to device
-    printf("OK 2\n");
-    cl_err2 = clEnqueueWriteBuffer(que, his_cl, CL_TRUE, 0, sizeof(unsigned int) * 256 * 3, histogram_results, 0, NULL, NULL); // Histogram result from host to device
-    printf("OK 3\n");
+    //--------------------memory from host to device--------------//
+    cl_err = clEnqueueWriteBuffer(que, img_cl, CL_TRUE, 0, sizeof(unsigned char) * input_size, image, 0, NULL, NULL); // input image from host to device
+    cl_err2 = clEnqueueWriteBuffer(que, his_cl, CL_TRUE, 0, sizeof(unsigned int) * 256 * 3, histogram_results, 0, NULL, NULL); // histogram result from host to device
     if (cl_err == CL_SUCCESS && cl_err2 == CL_SUCCESS)
     {
         printf("CL memory enqueueing OK\n");
@@ -137,7 +133,6 @@ int main(int argc, char const *argv[])
         return 1;
     }
 
-    memset(histogram_results, 0, sizeof(unsigned int) * 256 * 3);
     histogram_results = histogram(image, input_size);
     for(unsigned int i = 0; i < 256 * 3; ++i) 
     {
