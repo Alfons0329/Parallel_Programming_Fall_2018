@@ -16,52 +16,47 @@ const char* histogram = "\
 __kernel void histogram(__global unsigned char* image_data, __global unsigned int* result_data, unsigned int size)\
 {\
     int idx = get_global_id(0);\
-    int i;\
-    if(idx > size - 2) \
-    {\
-        return;\
-    }\
-    \
-    switch(idx)\
-    {\
-        case 0 ... 255:\
-            {\
-                for (i = 0; i < size; i+=3)\
-                {\
-                    if (idx == image_data[i])\
-                    {\
-                        result_data[idx]++;\
-                    }\
-                }\
-                break;\
-            }\
-        case 256 ... 511:\
-            {\
-                for (i = 1; i < size; i+=3)\
-                {\
-                    if (idx - 256 == image_data[i])\
-                    {\
-                        result_data[idx]++;\
-                    }\
-                }\
-                break;\
-            }\
-        case 512 ... 767:\
-            {\
-                for (i = 2; i < size; i+=3)\
-                {\
-                    if (idx - 512 == image_data[i])\ 
-                    {\
-                        result_data[idx]++;\
-                    }\
-                }\
-                break;\
-            }\
-        default:\
-            break;\
-    }\
+        int i;\
+        switch(idx)\
+        {\
+            case 0 ... 255:\
+                           {\
+                               for (i = size - 3; i >= 0; i -= 3)\
+                               {\
+                                   if (idx == image_data[i])\
+                                   {\
+                                       result_data[idx]++;\
+                                   }\
+                               }\
+                               break;\
+                           }\
+            case 256 ... 511:\
+                             {\
+                                 for (i = size - 2; i >= 1; i -= 3)\
+                                 {\
+                                     if (idx - 256 == image_data[i])\
+                                     {\
+                                         result_data[idx]++;\
+                                     }\
+                                 }\
+                                 break;\
+                             }\
+            case 512 ... 767:\
+                             {\
+                                 for (i = size - 1; i >= 2; i -= 3)\
+                                 {\
+                                     if (idx - 512 == image_data[i])\ 
+                                     {\
+                                         result_data[idx]++;\
+                                     }\
+                                 }\
+                                 break;\
+                             }\
+            default:\
+                    break;\
+        }\
 }\
-";
+    ";
 
 int main(int argc, char const *argv[])
 {    
@@ -150,19 +145,40 @@ int main(int argc, char const *argv[])
         return 1;
     }
 
-    //histogram_results = histogram(image, input_size);
+    // argument corresponding to the function histogram
+    clSetKernelArg(kernel_core, 0, sizeof(cl_mem), &img_cl);
+    clSetKernelArg(kernel_core, 1, sizeof(cl_mem), &his_cl);
+    clSetKernelArg(kernel_core, 2, sizeof(unsigned int), &input_size);
 
-    /*for(unsigned int i = 0; i < 256 * 3; ++i) 
+    size_t work_size = 768;
+    cl_err = clEnqueueNDRangeKernel(que, kernel_core, 1, 0, &work_size, 0, 0, NULL, NULL);
+    if (cl_err == CL_SUCCESS)
+    {
+        cl_err2 = clEnqueueReadBuffer(que, his_cl, CL_TRUE, 0, sizeof(unsigned int) * 256 * 3, histogram_results, NULL, NULL, NULL);
+        if (cl_err2 != CL_SUCCESS)
+        {
+            printf("EnqueueReadBuffer failed \n");
+        }
+    }
+    else
+    {
+        printf("NDRange failed \n");
+        return 1;
+    }
+    
+    printf("All done \n");
+    for(unsigned int i = 0; i < 256 * 3; ++i) 
     {
         if (i % 256 == 0 && i != 0)
         {
             fprintf(outFile, "\n");
         }
         fprintf(outFile, "%u ", histogram_results[i]);
-    }*/
+    }
 
-    // clReleaseProgram();
-    // clReleaseKernel();
+    // release after OpenCL program finished
+    clReleaseProgram(kernel_prog);
+    clReleaseKernel(kernel_core);
     fclose(inFile);
     fclose(outFile);
     return 0;
