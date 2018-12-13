@@ -55,12 +55,12 @@ __global__ void cuda_gaussian_filter(unsigned char* input_image, unsigned char* 
                 continue;
             }
             //printf("Location = %d \n", 3 * (b * img_width + a) + shift);
-            //printf(" j * ws + i is %d \n", j * ws + i);
+            printf(" j * ws + i = %d j = %d i = %d\n", j * ws + i, j, i);
             printf("process w = %d h = %d  ws = %d\n", a, b, ws);
             tmp += filter_G[j * ws + i] * input_image[3 * (b * img_width + a) + shift];
             // printf(" , Value = %d ", input_image[3 * (b * img_width + a) + shift]);
             // printf("\n");
-            printf(" i = %d j = %d \n", i, j);
+            // printf(" i = %d j = %d \n", i, j);
         }
     }
 
@@ -166,7 +166,7 @@ int main(int argc, char* argv[])
         }
 
 
-        for (int i = 0; i < 3; i++) //R G B channel respectively
+        for (int i = 2; i >= 0; i++) //R G B channel respectively
         {
             cuda_gaussian_filter<<<(resolution + TILE_WIDTH) / TILE_WIDTH, TILE_WIDTH>>>(cuda_input_image, cuda_output_image, img_width, img_height, i, filter_G, (int)sqrt((int)FILTER_SIZE), FILTER_SCALE);
             cudaError_t cuda_err = cudaDeviceSynchronize();

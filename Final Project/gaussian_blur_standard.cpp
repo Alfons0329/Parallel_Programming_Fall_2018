@@ -142,7 +142,7 @@ int main(int argc, char* argv[])
 		}
 
 		// write output BMP file
-        outputblur_name = "input" + to_string(k) + "_blur.bmp";
+       outputblur_name = inputfile_name.substr(0, inputfile_name.size() - 4)+ "_blur.bmp";
 		bmpReader->WriteBMP(outputblur_name.c_str(), img_width, img_height, pic_out);
 
         write_and_show(bmpReader, inputfile_name, k);
