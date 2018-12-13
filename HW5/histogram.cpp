@@ -36,8 +36,8 @@ inline char gchar()
     }
     return *(ptr++);
 }
-
-void read_in(unsigned char &in)
+template<typename T>
+void read_in(T &in)
 {
     in = 0;
     char ch = gchar();
@@ -108,7 +108,8 @@ int main(int argc, char const *argv[])
     FILE* outFile = fopen("0416324.out", "w");
     
     fd = open("input", O_RDONLY);
-    fscanf(inFile, "%u", &input_size);
+    //fscanf(inFile, "%u", &input_size);
+    read_in(input_size);
     printf("input size = %u fd = %d\n", input_size, fd);
 
     image = (unsigned char* ) malloc (sizeof(unsigned char) * input_size);// R, G, B ranging from 0x00 to 0xFF
