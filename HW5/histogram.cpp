@@ -37,7 +37,7 @@ inline char gchar()
     return *(ptr++);
 }
 
-void read_in(unsigned char in)
+void read_in(unsigned char &in)
 {
     in = 0;
     char ch = gchar();
@@ -47,8 +47,7 @@ void read_in(unsigned char in)
     }
     while (ch >= '0' && ch <= '9')
     {
-        in = in * 10 + (ch - '0');
-        ch - gchar();
+        in = in * 10 + (ch - '0'), ch= gchar();
     }
 }
 const char* histogram = "\ 
@@ -108,8 +107,9 @@ int main(int argc, char const *argv[])
     FILE* inFile = fopen("input", "r");
     FILE* outFile = fopen("0416324.out", "w");
     
-    int fd = open("input", O_RDONLY);
+    fd = open("input", O_RDONLY);
     fscanf(inFile, "%u", &input_size);
+    printf("input size = %u fd = %d\n", input_size, fd);
 
     image = (unsigned char* ) malloc (sizeof(unsigned char) * input_size);// R, G, B ranging from 0x00 to 0xFF
     histogram_results = (unsigned int* ) malloc (sizeof(unsigned int) * 256 * 3);// R 256, G 256, B 256, total 768 statistical data
@@ -117,7 +117,7 @@ int main(int argc, char const *argv[])
 
     for (; i < input_size; i++)
     {
-        read_in(fd);
+        read_in(image[i]);
     }
     /*while(fscanf(inFile, "%u", &a) != EOF)
     {
