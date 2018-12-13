@@ -45,6 +45,7 @@ unsigned char gaussian_filter(int w, int h,int shift)
 			{
 				continue;
 			} 
+            printf("Location = %d \n", 3 * (b * img_width + a) + shift);
 			tmp += filter_G[j * ws + i] * pic_in[3 * (b * img_width + a) + shift];
 		}
 	}
