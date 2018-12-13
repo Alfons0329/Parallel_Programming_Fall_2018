@@ -6,10 +6,13 @@
 #include <pthread.h>
 #include <string>
 
-// openCV libraries for showing the images
+// openCV libraries for showing the images dont change
 #include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/opencv.hpp>
 
 using namespace std;
+using namespace cv;
 
 #define MYRED	2
 #define MYGREEN 1
@@ -59,6 +62,20 @@ unsigned char gaussian_filter(int w, int h,int shift)
 
 	return (unsigned char)tmp;
 }
+// show the progress of gaussian segment by segment
+const float segment[] = { 0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f, 0.7f, 0.8f, 0.9f, 1.0f };
+void write_and_show(BmpReader* bmpReader, string outputblur_name, int k)
+{
+
+	// write output BMP file
+    outputblur_name = "input" + to_string(k) + "_blur.bmp";
+	bmpReader->WriteBMP(outputblur_name.c_str(), img_width, img_height, pic_out);
+
+    // show the output file
+    Mat img = imread(outputblur_name);
+    imshow("Current progress", img);
+    waitKey(1);
+}
 
 int main(int argc, char* argv[])
 {
@@ -70,10 +87,6 @@ int main(int argc, char* argv[])
     {
         printf("Please provide filename for Gaussian Blur. usage ./gb_std.o <BMP image file>");
         return 1;
-    }
-    else
-    {
-        inputfile_name = argv[1];
     }
     
     // read Gaussian mask file from system
@@ -93,7 +106,6 @@ int main(int argc, char* argv[])
 		filter_G[i] *= RATE;
 		FILTER_SCALE += filter_G[i];	
 	}
-	printf("filter scale [%f] \n", FILTER_SCALE);
 	fclose(mask);
 
     // main part of Gaussian blur
@@ -101,12 +113,16 @@ int main(int argc, char* argv[])
 	for (int k = 1; k < argc; k++)
 	{
 		// read input BMP file
+        inputfile_name = argv[k];
 		pic_in = bmpReader -> ReadBMP(inputfile_name.c_str(), &img_width, &img_height);
+	    printf("Filter scale = %f and image size W = %d, H = %d\n", FILTER_SCALE, img_width, img_height);
 
 		// allocate space for output image
 		pic_out = (unsigned char*)malloc(3 * img_width * img_height * sizeof(unsigned char));
 
 		//apply the Gaussian filter to the image, RGB respectively
+        string tmp(inputfile_name);
+        int segment_cnt = 1;
 		for (int j = 0; j < img_height; j++) 
 		{
 			for (int i = 0; i < img_width; i++)
@@ -115,10 +131,17 @@ int main(int argc, char* argv[])
 				pic_out[3 * (j * img_width + i) + MYGREEN] = gaussian_filter(i, j, MYGREEN);
 				pic_out[3 * (j * img_width + i) + MYBLUE] = gaussian_filter(i, j, MYBLUE);
 			}
+            
+            // show the progress of image every 10% of work progress
+            if (j >= segment[segment_cnt - 1] * img_height && j < segment[segment_cnt] * img_height)
+            {
+                printf("Show segment %d with j is now %d \n", segment_cnt, j);
+                write_and_show(bmpReader, inputfile_name, k);
+                segment_cnt = (segment_cnt >= 10) ? segment_cnt : segment_cnt + 1;   
+            }
 		}
 
 		// write output BMP file
-        string tmp(inputfile_name);
         outputblur_name = "input" + to_string(k) + "_blur.bmp";
 		bmpReader->WriteBMP(outputblur_name.c_str(), img_width, img_height, pic_out);
 
