@@ -40,7 +40,7 @@ __global__ void cuda_gaussian_filter(unsigned char* input_image, unsigned char* 
     {
         return;
     }
-
+    // printf("cuda_width = %d, cuda_height = %d ", cuda_width, cuda_height);
     int tmp = 0;
     int a, b;
     for (int j = 0; j < ws; j++)
@@ -54,11 +54,13 @@ __global__ void cuda_gaussian_filter(unsigned char* input_image, unsigned char* 
             {
                 continue;
             }
-            printf("Location = %d \n", 3 * (b * img_width + a) + shift);
+            //printf("Location = %d \n", 3 * (b * img_width + a) + shift);
+            //printf(" j * ws + i is %d \n", j * ws + i);
+            printf("process w = %d h = %d  ws = %d\n", a, b, ws);
             tmp += filter_G[j * ws + i] * input_image[3 * (b * img_width + a) + shift];
             // printf(" , Value = %d ", input_image[3 * (b * img_width + a) + shift]);
             // printf("\n");
-            // printf(" i = %d j = %d \n", i, j);
+            printf(" i = %d j = %d \n", i, j);
         }
     }
 
