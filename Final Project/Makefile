@@ -22,12 +22,12 @@ SOURCE_CM=create_matrix.cpp
 #------------------------Compiler and flag-----------------------#
 #Compilers
 CPP=g++
-#MPICC=mpicc
-#NVCC=nvcc
+MPICC=mpicc
+NVCC=nvcc
 #LIBS and FLAGS
 PTHREAD_LIBS=-pthread 
 OTHER_LINS=-lm
-CPP_FLAGS=-std=c++11 -Wno-unused-result 
+CPP_FLAGS=-std=c++11 
 OPENCV=`pkg-config --cflags --libs opencv`
 
 #---------------------------Rules-------------------------------#

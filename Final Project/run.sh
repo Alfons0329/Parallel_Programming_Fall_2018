@@ -21,6 +21,7 @@ else
             ;;
         4)
             make cuda
+            time ./gb_cuda.o $1
             ;;
         5)
             make matrix
