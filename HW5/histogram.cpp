@@ -4,6 +4,11 @@
 #include <CL/opencl.h>
 #include <fstream>
 #include <iostream>
+#include <fcntl.h>
+#include <unistd.h>
+
+#pragma optimize level=3
+#pragma GCC optimize("-O3")
 /***************************Image histogram algorithm abstract by myself*************************************
  * Calculate the statistic data of the (R, G, B) of image, 
  * where each color can be describe as
@@ -12,6 +17,40 @@
  *
  * The data should ne parallelized corresponding to  [0, 255]for R [256, 512]for G [513, 767]for B
  * **********************************************************************************************************/
+// accelerate file IO
+int fd;
+inline char gchar()
+{
+    static char buf[1 << 25];
+    static char* ptr = buf;
+    static char* end = buf;
+
+    if (ptr == end)
+    {
+        end = buf + read(fd, buf, 1 << 25);
+        ptr = buf;
+        if (ptr == end)
+        {
+            return -1;
+        }
+    }
+    return *(ptr++);
+}
+
+void read_in(unsigned char in)
+{
+    in = 0;
+    char ch = gchar();
+    while (ch < '0' || ch > '9')
+    {
+        ch = gchar();
+    }
+    while (ch >= '0' && ch <= '9')
+    {
+        in = in * 10 + (ch - '0');
+        ch - gchar();
+    }
+}
 const char* histogram = "\ 
 __kernel void histogram(__global unsigned char* image_data, __global unsigned int* result_data, unsigned int size)\
 {\
@@ -68,16 +107,22 @@ int main(int argc, char const *argv[])
     //--------------------file IO and allocate memory-----------//
     FILE* inFile = fopen("input", "r");
     FILE* outFile = fopen("0416324.out", "w");
+    
+    int fd = open("input", O_RDONLY);
     fscanf(inFile, "%u", &input_size);
 
     image = (unsigned char* ) malloc (sizeof(unsigned char) * input_size);// R, G, B ranging from 0x00 to 0xFF
     histogram_results = (unsigned int* ) malloc (sizeof(unsigned int) * 256 * 3);// R 256, G 256, B 256, total 768 statistical data
     memset(histogram_results, 0, sizeof(sizeof(unsigned int) * 256 * 3));
 
-    while(fscanf(inFile, "%u", &a) != EOF)
+    for (; i < input_size; i++)
+    {
+        read_in(fd);
+    }
+    /*while(fscanf(inFile, "%u", &a) != EOF)
     {
         image[i++] = a;
-    }
+    }*/
     i = 0;
 
     //-----------------------OpenCL init-----------------------//
@@ -179,7 +224,8 @@ int main(int argc, char const *argv[])
     // release after OpenCL program finished
     clReleaseProgram(kernel_prog);
     clReleaseKernel(kernel_core);
-    fclose(inFile);
+    // fclose(inFile);
+    close(fd);
     fclose(outFile);
     return 0;
 }
