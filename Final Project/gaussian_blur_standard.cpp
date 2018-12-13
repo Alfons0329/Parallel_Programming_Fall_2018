@@ -74,7 +74,7 @@ void write_and_show(BmpReader* bmpReader, string outputblur_name, int k)
     // show the output file
     Mat img = imread(outputblur_name);
     imshow("Current progress", img);
-    waitKey(1);
+    waitKey(20);
 }
 
 int main(int argc, char* argv[])
@@ -133,7 +133,7 @@ int main(int argc, char* argv[])
 			}
             
             // show the progress of image every 10% of work progress
-            if (j >= segment[segment_cnt - 1] * img_height && j < segment[segment_cnt] * img_height)
+            if (j >= segment[segment_cnt - 1] * img_height && j <= segment[segment_cnt] * img_height)
             {
                 printf("Show segment %d with j is now %d \n", segment_cnt, j);
                 write_and_show(bmpReader, inputfile_name, k);
@@ -145,6 +145,7 @@ int main(int argc, char* argv[])
         outputblur_name = "input" + to_string(k) + "_blur.bmp";
 		bmpReader->WriteBMP(outputblur_name.c_str(), img_width, img_height, pic_out);
 
+        write_and_show(bmpReader, inputfile_name, k);
 		// free memory space
 		free(pic_in);
 		free(pic_out);
