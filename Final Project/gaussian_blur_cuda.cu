@@ -29,19 +29,26 @@ unsigned char *pic_in, *pic_blur, *pic_out;
 // variables for cuda parallel processing
 int TILE_WIDTH;
 
-unsigned char gaussian_filter(int w, int h,int shift)
+__global__ void cuda_gaussian_filter(unsigned char* input_image, unsigned char* output_image,int img_width, int img_height, int shift)
 {
-	int tmp = 0;
+	// for CUDA parallelization
+    int cuda_width = blockIdx.x * blockDim.x + threadIdx.x;
+    int cuda_height = blockIdx.y * blockDim.y + threadIdx.y;
+    if (cuda_width >= img_width || cuda_height >= img_height)
+    {
+        return;
+    }
+
+    int tmp = 0;
 	int a, b;
 	int ws = (int)sqrt((int)FILTER_SIZE);
-	// process R, G and B respectively, shift 0 is R, 1 is G and 2 is B respectively
 
 	for (int j = 0; j  <  ws; j++)
 	{
 		for (int i = 0; i  <  ws; i++)
 		{
-			a = w + i - (ws / 2);
-			b = h + j - (ws / 2);
+			a = cuda_width + i - (ws / 2);
+			b = cuda_height + j - (ws / 2);
 
 			// detect for borders of the image
 			if (a < 0 || b < 0 || a>=img_width || b>=img_height)
@@ -61,9 +68,9 @@ unsigned char gaussian_filter(int w, int h,int shift)
 	if (tmp > 255)
 	{
 		tmp = 255;
-	} 
+	}
 
-	return (unsigned char)tmp;
+    output_image[cuda_height * img_width + cuda_width] = tmp;
 }
 // show the progress of gaussian segment by segment
 const float segment[] = { 0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f, 0.7f, 0.8f, 0.9f, 1.0f };
@@ -127,25 +134,9 @@ int main(int argc, char* argv[])
 		//apply the Gaussian filter to the image, RGB respectively
         string tmp(inputfile_name);
         int segment_cnt = 1;
-		for (int j = 0; j < img_height; j++) 
-		{
-			for (int i = 0; i < img_width; i++)
-			{
-				pic_out[3 * (j * img_width + i) + MYRED] = gaussian_filter(i, j, MYRED);
-				pic_out[3 * (j * img_width + i) + MYGREEN] = gaussian_filter(i, j, MYGREEN);
-				pic_out[3 * (j * img_width + i) + MYBLUE] = gaussian_filter(i, j, MYBLUE);
-			}
-            
-            // show the progress of image every 10% of work progress
-            if (j >= segment[segment_cnt - 1] * img_height && j <= segment[segment_cnt] * img_height)
-            {
-                printf("Show segment %d with j is now %d \n", segment_cnt, j);
-                write_and_show(bmpReader, inputfile_name, k);
-                segment_cnt = (segment_cnt >= 10) ? segment_cnt : segment_cnt + 1;   
-            }
-		}
-
-		// write output BMP file
+		
+        
+        // write output BMP file
         outputblur_name = "input" + to_string(k) + "_blur.bmp";
 		bmpReader->WriteBMP(outputblur_name.c_str(), img_width, img_height, pic_out);
 
