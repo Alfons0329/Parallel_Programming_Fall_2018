@@ -27,28 +27,30 @@ CPP=g++
 #LIBS and FLAGS
 PTHREAD_LIBS=-pthread 
 OTHER_LINS=-lm
-CPP_FLAGS=-std=c++11 -Wno-unused-result
+CPP_FLAGS=-std=c++11 -Wno-unused-result 
+OPENCV=`pkg-config --cflags --libs opencv`
 
 #---------------------------Rules-------------------------------#
 #Rules for standard Gaussian blur (serial version)
 standard: gaussian_blur_standard.cpp
-	$(CPP) $(SOURCE) -o $(TARGET) $(CPP_FLAGS) $(LIBS)
+	$(CPP) $(SOURCE) -o $(TARGET) $(CPP_FLAGS) $(LIBS) $(OPENCV)
 
 #Rules for pthread Gaussian blur
 pthread: gaussian_blur_pthread.cpp
-	$(CPP) $(SOURCE2) -o $(TARGET2) $(CPP_FLAGS) $(LIBS)
-	
+	$(CPP) $(SOURCE2) -o $(TARGET2) $(CPP_FLAGS) $(LIBS) $(OPENCV)
+
 #Rules for OpenMp Gaussian blur
 omp: gaussian_blur_omp.cpp
-	$(MPICC) $(SOURCE3) -o $(TARGET3) $(CPP_FLAGS) $(LIBS)
+	$(MPICC) $(SOURCE3) -o $(TARGET3) $(CPP_FLAGS) $(LIBS) $(OPENCV)
 
 #Rules for CUDA Gaussian blur
 cuda: gaussian_blur_cuda.cu
-	$(NVCC) $(SOURCE4) -o $(TARGET4) $(CPP_FLAGS) $(LIBS)
+	$(NVCC) $(SOURCE4) -o $(TARGET4) $(CPP_FLAGS) $(LIBS) $(OPENCV)
 
 #Rules for Gaussian matrix generator
 matrix: create_matrix.cpp
-	$(CPP) $(SOURCE_CM) -o $(TARGET_CM) $(CPP_FLAGS)
+	$(CPP) $(SOURCE_CM) -o $(TARGET_CM) $(CPP_FLAGS) $(OPENCV)
+
 
 .PHONY: clean
 
