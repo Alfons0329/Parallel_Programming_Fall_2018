@@ -45,7 +45,7 @@ unsigned char gaussian_filter(int w, int h,int shift)
 			{
 				continue;
 			} 
-            printf("Location = %d \n", 3 * (b * img_width + a) + shift);
+            //printf("Location = %d \n", 3 * (b * img_width + a) + shift);
 			tmp += filter_G[j * ws + i] * pic_in[3 * (b * img_width + a) + shift];
 		}
 	}
@@ -67,9 +67,6 @@ unsigned char gaussian_filter(int w, int h,int shift)
 const float segment[] = { 0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f, 0.7f, 0.8f, 0.9f, 1.0f };
 void write_and_show(BmpReader* bmpReader, string outputblur_name, int k)
 {
-
-	// write output BMP file
-    outputblur_name = "input" + to_string(k) + "_blur.bmp";
 	bmpReader->WriteBMP(outputblur_name.c_str(), img_width, img_height, pic_out);
 
     // show the output file
@@ -124,6 +121,8 @@ int main(int argc, char* argv[])
 		//apply the Gaussian filter to the image, RGB respectively
         string tmp(inputfile_name);
         int segment_cnt = 1;
+        outputblur_name = inputfile_name.substr(0, inputfile_name.size() - 4)+ "_blur.bmp";
+
 		for (int j = 0; j < img_height; j++) 
 		{
 			for (int i = 0; i < img_width; i++)
@@ -137,16 +136,13 @@ int main(int argc, char* argv[])
             if (j >= segment[segment_cnt - 1] * img_height && j <= segment[segment_cnt] * img_height)
             {
                 printf("Show segment %d with j is now %d \n", segment_cnt, j);
-                write_and_show(bmpReader, inputfile_name, k);
+                write_and_show(bmpReader, outputblur_name, k);
                 segment_cnt = (segment_cnt >= 10) ? segment_cnt : segment_cnt + 1;   
             }
-		}
-
+        }
 		// write output BMP file
-       outputblur_name = inputfile_name.substr(0, inputfile_name.size() - 4)+ "_blur.bmp";
-		bmpReader->WriteBMP(outputblur_name.c_str(), img_width, img_height, pic_out);
-
-        write_and_show(bmpReader, inputfile_name, k);
+        bmpReader->WriteBMP(outputblur_name.c_str(), img_width, img_height, pic_out);
+        write_and_show(bmpReader, outputblur_name, k);
 		// free memory space
 		free(pic_in);
 		free(pic_out);
