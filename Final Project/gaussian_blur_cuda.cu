@@ -31,50 +31,68 @@ unsigned char *input_image, *pic_blur, *output_image;
 // variables for cuda parallel processing
 int TILE_WIDTH;
 
-__global__ void cuda_gaussian_filter(unsigned char* input_image, unsigned char* output_image,int img_width, int img_height, int shift, float* filter_G, int ws, float FILTER_SCALE, int img_border)
+__global__ void cuda_gaussian_filter(unsigned char* cuda_input_image, unsigned char* cuda_output_image,int img_width, int img_height, int shift, float* filter_G, int ws, float FILTER_SCALE, int img_border)
 {
     // for CUDA parallelization
     int cuda_width = blockIdx.x * blockDim.x + threadIdx.x;
     int cuda_height = blockIdx.y * blockDim.y + threadIdx.y;
-    if (cuda_width >= img_width || cuda_height >= img_height)
+    int half = ws / 2;
+    int target = 0;
+    /*if (cuda_width >= img_width || cuda_height >= img_height || cuda_width <= 0 || cuda_height <= 0  )
     {
-        return;
+        printf("OUT!!! Process cuda_height %d, cuda_width %d \n", cuda_height, cuda_width);
+        cuda_output_image[cuda_height * img_width + cuda_width] = 0;
     }
-    // printf("cuda_width = %d, cuda_height = %d ", cuda_width, cuda_height);
-    int tmp = 0;
-    int a = 0, b = 0, target = 0;
-    for (int j = 0; j < ws; j++)
+    else*/
     {
-        for (int i = 0; i < ws; i++)
+        int tmp = 0;
+        // int a = 0, b = 0, target = 0;
+        // printf("half = %d \n", half);
+        for (int i = -half; i <= half; i++)
         {
-            a = cuda_width + i - (ws / 2);
-            b = cuda_height + j - (ws / 2);
-            target = 3 * (b * img_width + a) + shift;
-            // detect for borders of the image
-            if (a < 0 || b < 0 || a >= img_width || b >= img_height || target >= img_border)
+            for (int j = -half; j <= half; j++)
             {
-                continue;
+                target = 3 * ((cuda_height + i) * img_width + (cuda_width + j)) + shift;
+                printf("target %d border %d \n", target, img_border);
+                if (target >= img_border || target < 0)
+                {
+                    printf("OUT \n");
+                    //cuda_output_image[target] = 0;
+                    continue;
+                }
+                tmp += filter_G[i * ws + j] * cuda_input_image[3 * ((cuda_height + i) * img_width + (cuda_width + j)) + shift];
             }
-            printf("Location = %d \n", 3 * (b * img_width + a) + shift);
-            tmp += filter_G[j * ws + i] * input_image[3 * (b * img_width + a) + shift];
-            printf(" , Value = %d ", input_image[3 * (b * img_width + a) + shift]);
-            // printf("\n");
-            // printf(" i = %d j = %d \n", i, j);
         }
+        tmp /= FILTER_SCALE;
+
+        if (tmp < 0)
+        {
+            tmp = 0;
+        } 
+        if (tmp > 255)
+        {
+            tmp = 255;
+        }
+        cuda_output_image[3 * (cuda_height * img_width + cuda_width) + shift] = tmp;
     }
-
-    tmp /= FILTER_SCALE;
-
-    if (tmp < 0)
-    {
-        tmp = 0;
-    } 
-    if (tmp > 255)
-    {
-        tmp = 255;
-    }
-
-    output_image[3 * (cuda_height * img_width + cuda_width) + shift] = tmp;
+    /*
+    for (int j = 0; j < ws; j++)
+        {
+            for (int i = 0; i < ws; i++)
+            {
+                a = cuda_width + i - (ws / 2);
+                b = cuda_height + j - (ws / 2);
+                target = 3 * (b * img_width + a) + shift;
+                // detect for borders of the image
+                if (a < 0 || b < 0 || a >= img_width || b >= img_height || target >= img_border)
+                {
+                    continue;
+                }
+                printf("Location = %d , Border = %d\n", 3 * (b * img_width + a) + shift, img_border);
+                tmp += filter_G[j * ws + i] * cuda_input_image[3 * (b * img_width + a) + shift];
+            }
+        }
+    */
 }
 // show the progress of gaussian segment by segment
 const float segment[] = { 0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f, 0.7f, 0.8f, 0.9f, 1.0f };
@@ -148,7 +166,6 @@ int main(int argc, char* argv[])
 
         unsigned char* cuda_input_image;
         unsigned char* cuda_output_image;
-
         cuda_err = cudaMalloc((void**) &cuda_input_image, resolution * sizeof(unsigned char));
         cuda_err = cudaMalloc((void**) &cuda_output_image, resolution * sizeof(unsigned char));
         if(cuda_err != cudaSuccess)
@@ -165,7 +182,7 @@ int main(int argc, char* argv[])
         }
 
 
-        for (int i = 2; i >= 0; i++) //R G B channel respectively
+        for (int i = 2; i >= 0; i--) //R G B channel respectively
         {
             cuda_gaussian_filter<<<(resolution) / TILE_WIDTH, TILE_WIDTH>>>(cuda_input_image, cuda_output_image, img_width, img_height, i, filter_G, (int)sqrt((int)FILTER_SIZE), FILTER_SCALE, resolution);
             cudaError_t cuda_err = cudaDeviceSynchronize();

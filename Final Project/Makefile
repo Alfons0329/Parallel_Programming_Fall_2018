@@ -15,6 +15,10 @@ SOURCE3=gaussian_blur_omp.cpp
 TARGET4=gb_cuda.o
 SOURCE4=gaussian_blur_cuda.cu
 
+#CUDA Gaussian blur with OpenCV
+TARGET5=gb_cuda_cv.o
+SOURCE5=gaussian_blur_cuda_cv.cu
+
 #Gaussian matrix generator
 TARGET_CM=cm.o
 SOURCE_CM=create_matrix.cpp
@@ -46,6 +50,7 @@ omp: gaussian_blur_omp.cpp
 #Rules for CUDA Gaussian blur
 cuda: gaussian_blur_cuda.cu
 	$(NVCC) $(SOURCE4) -o $(TARGET4) $(CPP_FLAGS) $(LIBS) $(OPENCV)
+	#$(NVCC) $(SOURCE4) -o $(TARGET4) $(CPP_FLAGS) $(LIBS) $(OPENCV)
 
 #Rules for Gaussian matrix generator
 matrix: create_matrix.cpp
