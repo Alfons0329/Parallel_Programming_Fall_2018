@@ -57,7 +57,7 @@ __global__ void cuda_gaussian_filter(unsigned char* input_image, unsigned char* 
             }
             printf("Location = %d \n", 3 * (b * img_width + a) + shift);
             tmp += filter_G[j * ws + i] * input_image[3 * (b * img_width + a) + shift];
-            // printf(" , Value = %d ", input_image[3 * (b * img_width + a) + shift]);
+            printf(" , Value = %d ", input_image[3 * (b * img_width + a) + shift]);
             // printf("\n");
             // printf(" i = %d j = %d \n", i, j);
         }
@@ -136,7 +136,7 @@ int main(int argc, char* argv[])
         printf("Filter scale = %f and image size W = %d, H = %d\n", FILTER_SCALE, img_width, img_height);
 
         // allocate space for output image
-        int resolution = 3 * (img_width * img_height); //padding
+        int resolution = 3 * (img_width * img_height + 1); //padding
         output_image = (unsigned char*)malloc(resolution * sizeof(unsigned char));
         memset(output_image, 0, sizeof(output_image));
         // apply the Gaussian filter to the image, RGB respectively
@@ -167,7 +167,7 @@ int main(int argc, char* argv[])
 
         for (int i = 2; i >= 0; i++) //R G B channel respectively
         {
-            cuda_gaussian_filter<<<(resolution + TILE_WIDTH) / TILE_WIDTH, TILE_WIDTH>>>(cuda_input_image, cuda_output_image, img_width, img_height, i, filter_G, (int)sqrt((int)FILTER_SIZE), FILTER_SCALE, resolution);
+            cuda_gaussian_filter<<<(resolution) / TILE_WIDTH, TILE_WIDTH>>>(cuda_input_image, cuda_output_image, img_width, img_height, i, filter_G, (int)sqrt((int)FILTER_SIZE), FILTER_SCALE, resolution);
             cudaError_t cuda_err = cudaDeviceSynchronize();
 
             if(cuda_err != cudaSuccess)
