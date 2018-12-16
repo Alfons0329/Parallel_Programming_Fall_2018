@@ -32,23 +32,23 @@ unsigned char gaussian_filter(int w, int h,int shift, int img_border)
 	int ws = (int)sqrt((int)FILTER_SIZE);
     int target = 0;
 	ull tmp = 0;
+    int a, b;
 
-    for (int i = 0; i < ws; i++)
-    {
-        for (int j = 0; j < ws; j++)
-        {
-            target = 3 * ((h + i) * img_width + (w + j)) + shift;
-            if (target >= img_border || target < 0)
-            {
-                continue;
-            }
-            tmp += filter_G[i * ws + j] * ((ull)pic_in[target]);
-            if (w == 205 && h == 205)
-            {
-                // printf("fg %llu access %d \n", filter_G[i * ws + j], i * ws + j);
-            }
-        }
-    }
+    for (int j = 0; j  <  ws; j++)
+	{
+		for (int i = 0; i  <  ws; i++)
+		{
+			a = w + i - (ws / 2);
+			b = h + j - (ws / 2);
+
+			// detect for borders of the image
+			if (a < 0 || b < 0 || a >= img_width || b >= img_height)
+			{
+				continue;
+			} 
+			tmp += filter_G[j * ws + i] * pic_in[3 * (b * img_width + a) + shift];
+		}
+	}
     tmp /= FILTER_SCALE;
     if (tmp < 0)
     {
