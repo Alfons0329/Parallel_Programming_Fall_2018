@@ -17,23 +17,23 @@ using namespace cv;
 #define MYRED	2
 #define MYGREEN 1
 #define MYBLUE	0
-#define RATE 1000000
+#define RATE 10000
 int img_width, img_height;
 
 int FILTER_SIZE;
-float FILTER_SCALE;
-float *filter_G;
+unsigned long long  FILTER_SCALE;
+unsigned long long  *filter_G;
 
 unsigned char *pic_in, *pic_blur, *pic_out;
 
-unsigned char gaussian_filter(int w, int h,int shift)
+unsigned char gaussian_filter(int w, int h,int shift, int img_border)
 {
-	int tmp = 0;
 	int a, b;
 	int ws = (int)sqrt((int)FILTER_SIZE);
-	// process R, G and B respectively, shift 0 is R, 1 is G and 2 is B respectively
+    int half = ws >> 1;
+    int target = 0;
 
-	for (int j = 0; j  <  ws; j++)
+	/*for (int j = 0; j  <  ws; j++)
 	{
 		for (int i = 0; i  <  ws; i++)
 		{
@@ -57,8 +57,38 @@ unsigned char gaussian_filter(int w, int h,int shift)
 	if (tmp > 255)
 	{
 		tmp = 255;
-	} 
-	// printf("Input %d Output %d \n", pic_in[3 * (h * img_width + w) + shift], tmp);
+	} */
+
+	/*if (3 * (h * img_width + w) + shift >= img_border)
+    {
+        return 0;
+    }*/
+
+	unsigned long long tmp = 0;
+    for (int i = -half; i <= half; i++)
+    {
+        for (int j = -half; j <= half; j++)
+        {
+            target = 3 * ((h + i) * img_width + (w + j)) + shift;
+            if (target >= img_border || target < 0)
+            {
+                continue;
+            }
+            tmp += filter_G[i * ws + j] * pic_in[target];
+        }
+    }
+	printf("tmp before %lld", tmp);
+    tmp /= (unsigned long long int)FILTER_SCALE;
+	printf("tmp after %lld \n", tmp);
+    if (tmp < 0)
+    {
+        tmp = 0;
+    } 
+    if (tmp > 255)
+    {
+        tmp = 255;
+    }
+	// printf("Input %d Output %d img_birder %d filter_g %f\n", pic_in[3 * (h * img_width + w) + shift], tmp, img_border, filter_G[w % 35]);
 	return (unsigned char)tmp;
 }
 // show the progress of gaussian segment by segment
@@ -89,7 +119,7 @@ int main(int argc, char* argv[])
     FILE* mask;
 	mask = fopen("mask_Gaussian.txt", "r");
 	fscanf(mask, "%d", &FILTER_SIZE);
-	filter_G = new float[FILTER_SIZE];
+	filter_G = new unsigned long long [FILTER_SIZE];
 
 	for (int i = 0; i < FILTER_SIZE; i++)
 	{
@@ -113,6 +143,7 @@ int main(int argc, char* argv[])
 		pic_in = bmpReader -> ReadBMP(inputfile_name.c_str(), &img_width, &img_height);
 	    printf("Filter scale = %f and image size W = %d, H = %d\n", FILTER_SCALE, img_width, img_height);
 
+		int resolution = 3 * (img_width * img_height);
 		// allocate space for output image
 		pic_out = (unsigned char*)malloc(3 * img_width * img_height * sizeof(unsigned char));
 
@@ -125,9 +156,9 @@ int main(int argc, char* argv[])
 		{
 			for (int i = 0; i < img_width; i++)
 			{
-				pic_out[3 * (j * img_width + i) + MYRED] = gaussian_filter(i, j, MYRED);
-				pic_out[3 * (j * img_width + i) + MYGREEN] = gaussian_filter(i, j, MYGREEN);
-				pic_out[3 * (j * img_width + i) + MYBLUE] = gaussian_filter(i, j, MYBLUE);
+				pic_out[3 * (j * img_width + i) + MYRED] = gaussian_filter(i, j, MYRED, resolution);
+				pic_out[3 * (j * img_width + i) + MYGREEN] = gaussian_filter(i, j, MYGREEN, resolution);
+				pic_out[3 * (j * img_width + i) + MYBLUE] = gaussian_filter(i, j, MYBLUE, resolution);
 			}
             
             // show the progress of image every 10% of work progress

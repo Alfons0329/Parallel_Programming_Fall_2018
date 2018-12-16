@@ -3,14 +3,16 @@
 #include <iostream> 
 #include <fstream>
 #include <vector>
+#define ull unsigned long long int
 using namespace std; 
 int matrix_size;
-double sigma; 
-void FilterCreation(vector<vector <double> >& GKernel) 
+const float sigma = 5000.0f; 
+const ull RATE = 1e10;
+void FilterCreation(vector<vector <float> >& GKernel) 
 { 
-    double r, s = 2.0 * sigma * sigma; 
+    float r, s = 2.0 * sigma * sigma; 
     // sum is for normalization 
-    double sum = 0.0; 
+    float sum = 0.0; 
   
     // generating  kernel 
     for (int x = -matrix_size / 2; x <= matrix_size / 2; x++)
@@ -51,19 +53,20 @@ int main()
         return 1;
     }
     printf("Input stddev: ");
-    scanf("%lf", &sigma);
     printf("matrix = %d , stddev = %lf \n", matrix_size, sigma);
 
-    vector<vector<double> > GKernel(matrix_size, vector<double>(matrix_size, 0.0f));
+    vector<vector<float> > GKernel(matrix_size, vector<float>(matrix_size, 0.0f));
     FilterCreation(GKernel); 
   
     output_file << matrix_size * matrix_size << endl;
 
+    ull tmp = 0;
     for (int i = 0; i < matrix_size; ++i) 
     { 
         for (int j = 0; j < matrix_size; ++j)
         {
-            output_file  << GKernel[i][j] << " "; 
+            tmp = (unsigned long long) ( GKernel[i][j] * RATE );
+            output_file << tmp << " " ;
         }
         output_file << endl; 
     }

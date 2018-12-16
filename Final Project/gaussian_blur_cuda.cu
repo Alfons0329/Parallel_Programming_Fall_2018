@@ -19,7 +19,7 @@ using namespace cv;
 #define MYRED	2
 #define MYGREEN 1
 #define MYBLUE	0
-#define RATE 1000000
+#define RATE 10000
 int img_width, img_height;
 
 int FILTER_SIZE;
@@ -71,7 +71,7 @@ __global__ void cuda_gaussian_filter(unsigned char* cuda_input_image, unsigned c
     {
         return;
     }
-    int tmp = 0;
+    unsigned long long tmp = 0;
     for (int i = -half; i <= half; i++)
     {
         for (int j = -half; j <= half; j++)
@@ -157,7 +157,7 @@ int main(int argc, char* argv[])
         printf("Filter scale = %f and image size W = %d, H = %d\n", FILTER_SCALE, img_width, img_height);
 
         // allocate space for output image
-        int resolution = 3 * (img_width * img_height + 1); //padding
+        int resolution = 3 * (img_width * img_height); //padding
         output_image = (unsigned char*)malloc(resolution * sizeof(unsigned char));
         memset(output_image, 0, sizeof(output_image));
         // apply the Gaussian filter to the image, RGB respectively
@@ -214,6 +214,20 @@ int main(int argc, char* argv[])
         cudaFree(cuda_output_image);
         cudaFree(cuda_filter_G);
     }
+
+    printf("diff img \n");
+
+    string inputfile_name2 = inputfile_name.substr(0, inputfile_name.size() - 4)+ "_blur.bmp";
+    unsigned char* input_image2 = bmpReader -> ReadBMP(inputfile_name2.c_str(), &img_width, &img_height);
+
+    string inputfile_name3 = inputfile_name.substr(0, inputfile_name.size() - 4)+ "_blur_cuda.bmp";
+    unsigned char* input_image3 = bmpReader -> ReadBMP(inputfile_name3.c_str(), &img_width, &img_height);
+    cout << "name 2 3 " << inputfile_name2 << " , " << inputfile_name3 << endl;
+    /*for (int j = 0; j < img_width * img_height * 3; j+=3)
+    {
+        printf("Normal %d, %d, %d Dim %d, %d, %d \n", input_image2[j], input_image2[j + 1], input_image2[j +2], input_image3[j], input_image3[j + 1], input_image3[j +2]);
+    }*/
+
 
     return 0;
 }
