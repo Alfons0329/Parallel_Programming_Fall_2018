@@ -36,35 +36,62 @@ __global__ void cuda_gaussian_filter(unsigned char* cuda_input_image, unsigned c
     // for CUDA parallelization
     int cuda_width = blockIdx.x * blockDim.x + threadIdx.x;
     int cuda_height = blockIdx.y * blockDim.y + threadIdx.y;
+
+    int a, b;
     int half = ws >> 1;
     int target = 0;
-    {
-        int tmp = 0;
-        for (int i = -half; i <= half; i++)
-        {
-            for (int j = -half; j <= half; j++)
-            {
-                target = 3 * ((cuda_height + i) * img_width + (cuda_width + j)) + shift;
-                if (target >= img_border || target < 0)
-                {
-                    continue;
-                }
-                tmp += cuda_filter_G[i * ws + j] * cuda_input_image[target];
-            }
-        }
-        tmp /= FILTER_SCALE;
-        printf("tmp = %d FILTER_SCALE = %f\n", tmp, FILTER_SCALE);
-        if (tmp < 0)
-        {
-            tmp = 0;
-        } 
-        if (tmp > 255)
-        {
-            tmp = 255;
-        }
-        cuda_output_image[3 * (cuda_height * img_width + cuda_width) + shift] = tmp;
+    /*for (int j = 0; j  <  ws; j++)
+	{
+		for (int i = 0; i  <  ws; i++)
+		{
+			a = cuda_width + i - (ws / 2);
+			b = cuda_height + j - (ws / 2);
+
+			// detect for borders of the image
+            a = min(max(a, 0), img_width - 1);
+            b = min(max(b, 0), img_height - 1);
+			tmp += cuda_filter_G[j * ws + i] * cuda_input_image[3 * (b * img_width + a) + shift];
+		}
+    }
+	tmp /= FILTER_SCALE;
+	if (tmp < 0)
+	{
+		tmp = 0;
+	} 
+	if (tmp > 255)
+	{
+		tmp = 255;
     }
 
+    cuda_output_image[3 * (cuda_height * img_width + cuda_width) + shift] = tmp; 
+    */
+    
+    //THIS WORK
+    int tmp = 0;
+    for (int i = -half; i <= half; i++)
+    {
+        for (int j = -half; j <= half; j++)
+        {
+            target = 3 * ((cuda_height + i) * img_width + (cuda_width + j)) + shift;
+            if (target >= img_border || target < 0)
+            {
+                continue;
+            }
+            tmp += cuda_filter_G[i * ws + j] * cuda_input_image[target];
+        }
+    }
+    tmp /= FILTER_SCALE;
+    if (tmp < 0)
+    {
+        tmp = 0;
+    } 
+    if (tmp > 255)
+    {
+        tmp = 255;
+    }
+    cuda_output_image[3 * (cuda_height * img_width + cuda_width) + shift] = tmp;
+    printf("Input %d Output %d \n", cuda_input_image[3 * (cuda_height * img_width + cuda_width) + shift], cuda_output_image[3 * (cuda_height * img_width + cuda_width) + shift]);
+    
 }
 // show the progress of gaussian segment by segment
 const float segment[] = { 0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f, 0.7f, 0.8f, 0.9f, 1.0f };

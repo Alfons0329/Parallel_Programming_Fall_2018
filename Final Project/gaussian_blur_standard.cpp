@@ -45,13 +45,11 @@ unsigned char gaussian_filter(int w, int h,int shift)
 			{
 				continue;
 			} 
-            //printf("Location = %d \n", 3 * (b * img_width + a) + shift);
 			tmp += filter_G[j * ws + i] * pic_in[3 * (b * img_width + a) + shift];
 		}
 	}
 
 	tmp /= FILTER_SCALE;
-    printf("tmp = %d FILTER_SCALE = %f\n", tmp, FILTER_SCALE);
 	if (tmp < 0)
 	{
 		tmp = 0;
@@ -60,7 +58,7 @@ unsigned char gaussian_filter(int w, int h,int shift)
 	{
 		tmp = 255;
 	} 
-
+	printf("Input %d Output %d \n", pic_in[3 * (h * img_width + w) + shift], tmp);
 	return (unsigned char)tmp;
 }
 // show the progress of gaussian segment by segment
