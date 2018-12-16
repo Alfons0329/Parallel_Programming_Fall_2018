@@ -30,20 +30,23 @@ unsigned char *pic_in, *pic_blur, *pic_out;
 unsigned char gaussian_filter(int w, int h,int shift, int img_border)
 {
 	int ws = (int)sqrt((int)FILTER_SIZE);
-    int half = ws >> 1;
     int target = 0;
 	ull tmp = 0;
 
-    for (int i = -half; i <= half; i++)
+    for (int i = 0; i < ws; i++)
     {
-        for (int j = -half; j <= half; j++)
+        for (int j = 0; j < ws; j++)
         {
             target = 3 * ((h + i) * img_width + (w + j)) + shift;
             if (target >= img_border || target < 0)
             {
                 continue;
             }
-            tmp += filter_G[i * ws + j] * pic_in[target];
+            tmp += filter_G[i * ws + j] * ((ull)pic_in[target]);
+            if (w == 205 && h == 205)
+            {
+                // printf("fg %llu access %d \n", filter_G[i * ws + j], i * ws + j);
+            }
         }
     }
     tmp /= FILTER_SCALE;
@@ -96,7 +99,8 @@ int main(int argc, char* argv[])
 	FILTER_SCALE = 0; //recalculate
 	for (int i = 0; i < FILTER_SIZE; i++)
 	{
-		FILTER_SCALE += filter_G[i];	
+		FILTER_SCALE += filter_G[i];
+        //printf("filter_G %d ", filter_G[i]);
 	}
 	fclose(mask);
 

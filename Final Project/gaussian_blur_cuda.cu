@@ -38,7 +38,6 @@ __global__ void cuda_gaussian_filter(unsigned char* cuda_input_image, unsigned c
     int cuda_width = blockIdx.x * blockDim.x + threadIdx.x;
     int cuda_height = blockIdx.y * blockDim.y + threadIdx.y;
 
-    int half = ws >> 1;
     int target = 0;
     unsigned long long int tmp = 0;
     
@@ -46,9 +45,9 @@ __global__ void cuda_gaussian_filter(unsigned char* cuda_input_image, unsigned c
     {
         return;
     }
-    for (int i = -half; i <= half; i++)
+    for (int i = 0; i < ws; i++)
     {
-        for (int j = -half; j <= half; j++)
+        for (int j = 0; j < ws; j++)
         {
             target = 3 * ((cuda_height + i) * img_width + (cuda_width + j)) + shift;
             if (target >= img_border || target < 0)
