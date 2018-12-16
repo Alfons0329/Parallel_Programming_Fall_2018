@@ -51,7 +51,7 @@ unsigned char gaussian_filter(int w, int h,int shift)
 	}
 
 	tmp /= FILTER_SCALE;
-
+    printf("tmp = %d FILTER_SCALE = %f\n", tmp, FILTER_SCALE);
 	if (tmp < 0)
 	{
 		tmp = 0;

@@ -50,7 +50,6 @@ omp: gaussian_blur_omp.cpp
 #Rules for CUDA Gaussian blur
 cuda: gaussian_blur_cuda.cu
 	$(NVCC) $(SOURCE4) -o $(TARGET4) $(CPP_FLAGS) $(LIBS) $(OPENCV)
-	#$(NVCC) $(SOURCE4) -o $(TARGET4) $(CPP_FLAGS) $(LIBS) $(OPENCV)
 
 #Rules for Gaussian matrix generator
 matrix: create_matrix.cpp
