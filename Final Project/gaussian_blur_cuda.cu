@@ -52,7 +52,14 @@ __global__ void cuda_gaussian_filter(unsigned char* cuda_input_image, unsigned c
 		{
 			a = cuda_width + i - (ws / 2);
 			b = cuda_height + j - (ws / 2);
-
+            
+            /* THIS CAUSE ALL PICTURE TO BE BLACK ONE
+            if (a < 0 || b < 0 || a >= img_width || b >= img_height)
+            {
+                continue;
+            }
+             
+             */
 			// detect for borders of the image
             target = 3 * (b * img_width + a) + shift;
             if (target >= img_border || target < 0)
@@ -192,7 +199,7 @@ int main(int argc, char* argv[])
     }
 
     // diff pic if needed
-    
+    /* 
     printf("diff img \n");
 
     string inputfile_name2 = inputfile_name.substr(0, inputfile_name.size() - 4)+ "_blur.bmp";
@@ -208,7 +215,7 @@ int main(int argc, char* argv[])
             printf("Normal %d, %d, %d Dim %d, %d, %d \n", input_image2[j], input_image2[j + 1], input_image2[j +2], input_image3[j], input_image3[j + 1], input_image3[j +2]);
         }
     }
-    
+    */
     
 
     return 0;
