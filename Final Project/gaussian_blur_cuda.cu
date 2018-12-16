@@ -40,24 +40,30 @@ __global__ void cuda_gaussian_filter(unsigned char* cuda_input_image, unsigned c
 
     int target = 0;
     unsigned long long int tmp = 0;
+    int a, b;
     
     if (3 * (cuda_height * img_width + cuda_width) + shift >= img_border)
     {
         return;
     }
-    for (int i = 0; i < ws; i++)
-    {
-        for (int j = 0; j < ws; j++)
-        {
-            target = 3 * ((cuda_height + i) * img_width + (cuda_width + j)) + shift;
+    for (int j = 0; j  <  ws; j++)
+	{
+		for (int i = 0; i  <  ws; i++)
+		{
+			a = cuda_width + i - (ws / 2);
+			b = cuda_height + j - (ws / 2);
+
+			// detect for borders of the image
+            target = 3 * (b * img_width + a) + shift;
             if (target >= img_border || target < 0)
             {
                 continue;
             }
-            tmp += cuda_filter_G[i * ws + j] * cuda_input_image[target];
-        }
+			tmp += cuda_filter_G[j * ws + i] * cuda_input_image[3 * (b * img_width + a) + shift]; 
+		}
     }
     tmp /= FILTER_SCALE;
+    
     if (tmp < 0)
     {
         tmp = 0;
@@ -187,7 +193,7 @@ int main(int argc, char* argv[])
 
     // diff pic if needed
     
-    /*printf("diff img \n");
+    printf("diff img \n");
 
     string inputfile_name2 = inputfile_name.substr(0, inputfile_name.size() - 4)+ "_blur.bmp";
     unsigned char* input_image2 = bmpReader -> ReadBMP(inputfile_name2.c_str(), &img_width, &img_height);
@@ -202,7 +208,7 @@ int main(int argc, char* argv[])
             printf("Normal %d, %d, %d Dim %d, %d, %d \n", input_image2[j], input_image2[j + 1], input_image2[j +2], input_image3[j], input_image3[j + 1], input_image3[j +2]);
         }
     }
-    */
+    
     
 
     return 0;
