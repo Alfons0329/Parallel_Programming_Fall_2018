@@ -58,7 +58,7 @@ unsigned char gaussian_filter(int w, int h,int shift)
 	{
 		tmp = 255;
 	} 
-	printf("Input %d Output %d \n", pic_in[3 * (h * img_width + w) + shift], tmp);
+	// printf("Input %d Output %d \n", pic_in[3 * (h * img_width + w) + shift], tmp);
 	return (unsigned char)tmp;
 }
 // show the progress of gaussian segment by segment

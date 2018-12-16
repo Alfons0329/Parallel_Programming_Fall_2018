@@ -67,6 +67,10 @@ __global__ void cuda_gaussian_filter(unsigned char* cuda_input_image, unsigned c
     */
     
     //THIS WORK
+    if (3 * (cuda_height * img_width + cuda_width) + shift >= img_border)
+    {
+        return;
+    }
     int tmp = 0;
     for (int i = -half; i <= half; i++)
     {
@@ -90,7 +94,7 @@ __global__ void cuda_gaussian_filter(unsigned char* cuda_input_image, unsigned c
         tmp = 255;
     }
     cuda_output_image[3 * (cuda_height * img_width + cuda_width) + shift] = tmp;
-    printf("Input %d Output %d \n", cuda_input_image[3 * (cuda_height * img_width + cuda_width) + shift], cuda_output_image[3 * (cuda_height * img_width + cuda_width) + shift]);
+    // printf("Input %d Output %d \n", cuda_input_image[3 * (cuda_height * img_width + cuda_width) + shift], cuda_output_image[3 * (cuda_height * img_width + cuda_width) + shift]);
     
 }
 // show the progress of gaussian segment by segment
