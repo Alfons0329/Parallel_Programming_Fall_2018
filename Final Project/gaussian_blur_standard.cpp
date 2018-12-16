@@ -14,57 +14,26 @@
 using namespace std;
 using namespace cv;
 
+#define ull unsigned long long int
+
 #define MYRED	2
 #define MYGREEN 1
 #define MYBLUE	0
-#define RATE 10000
 int img_width, img_height;
 
 int FILTER_SIZE;
-unsigned long long  FILTER_SCALE;
-unsigned long long  *filter_G;
+ull FILTER_SCALE;
+ull *filter_G;
 
 unsigned char *pic_in, *pic_blur, *pic_out;
 
 unsigned char gaussian_filter(int w, int h,int shift, int img_border)
 {
-	int a, b;
 	int ws = (int)sqrt((int)FILTER_SIZE);
     int half = ws >> 1;
     int target = 0;
+	ull tmp = 0;
 
-	/*for (int j = 0; j  <  ws; j++)
-	{
-		for (int i = 0; i  <  ws; i++)
-		{
-			a = w + i - (ws / 2);
-			b = h + j - (ws / 2);
-
-			// detect for borders of the image
-			if (a < 0 || b < 0 || a>=img_width || b>=img_height)
-			{
-				continue;
-			} 
-			tmp += filter_G[j * ws + i] * pic_in[3 * (b * img_width + a) + shift];
-		}
-	}
-
-	tmp /= FILTER_SCALE;
-	if (tmp < 0)
-	{
-		tmp = 0;
-	} 
-	if (tmp > 255)
-	{
-		tmp = 255;
-	} */
-
-	/*if (3 * (h * img_width + w) + shift >= img_border)
-    {
-        return 0;
-    }*/
-
-	unsigned long long tmp = 0;
     for (int i = -half; i <= half; i++)
     {
         for (int j = -half; j <= half; j++)
@@ -77,9 +46,7 @@ unsigned char gaussian_filter(int w, int h,int shift, int img_border)
             tmp += filter_G[i * ws + j] * pic_in[target];
         }
     }
-	printf("tmp before %lld", tmp);
-    tmp /= (unsigned long long int)FILTER_SCALE;
-	printf("tmp after %lld \n", tmp);
+    tmp /= FILTER_SCALE;
     if (tmp < 0)
     {
         tmp = 0;
@@ -88,8 +55,8 @@ unsigned char gaussian_filter(int w, int h,int shift, int img_border)
     {
         tmp = 255;
     }
-	// printf("Input %d Output %d img_birder %d filter_g %f\n", pic_in[3 * (h * img_width + w) + shift], tmp, img_border, filter_G[w % 35]);
 	return (unsigned char)tmp;
+	// printf("Input %d Output %d img_birder %d filter_g %f\n", pic_in[3 * (h * img_width + w) + shift], tmp, img_border, filter_G[w % 35]);
 }
 // show the progress of gaussian segment by segment
 const float segment[] = { 0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f, 0.7f, 0.8f, 0.9f, 1.0f };
@@ -123,13 +90,12 @@ int main(int argc, char* argv[])
 
 	for (int i = 0; i < FILTER_SIZE; i++)
 	{
-		fscanf(mask, "%f", &filter_G[i]);
+		fscanf(mask, "%llu", &filter_G[i]);
 	}
 
-	FILTER_SCALE = 0.0f; //recalculate
+	FILTER_SCALE = 0; //recalculate
 	for (int i = 0; i < FILTER_SIZE; i++)
 	{
-		filter_G[i] *= RATE;
 		FILTER_SCALE += filter_G[i];	
 	}
 	fclose(mask);
@@ -141,7 +107,7 @@ int main(int argc, char* argv[])
 		// read input BMP file
         inputfile_name = argv[k];
 		pic_in = bmpReader -> ReadBMP(inputfile_name.c_str(), &img_width, &img_height);
-	    printf("Filter scale = %f and image size W = %d, H = %d\n", FILTER_SCALE, img_width, img_height);
+	    printf("Filter scale = %llu and image size W = %d, H = %d\n", FILTER_SCALE, img_width, img_height);
 
 		int resolution = 3 * (img_width * img_height);
 		// allocate space for output image

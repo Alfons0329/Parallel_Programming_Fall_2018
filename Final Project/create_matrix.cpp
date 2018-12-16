@@ -7,7 +7,7 @@
 using namespace std; 
 int matrix_size;
 const float sigma = 5000.0f; 
-const ull RATE = 1e10;
+const ull RATE = 1e5;
 void FilterCreation(vector<vector <float> >& GKernel) 
 { 
     float r, s = 2.0 * sigma * sigma; 
