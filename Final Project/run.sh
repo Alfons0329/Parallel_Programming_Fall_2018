@@ -18,6 +18,7 @@ else
             ;;
         3)
             make omp
+            time ./gb_omp.o $1
             ;;
         4)
             make cuda
