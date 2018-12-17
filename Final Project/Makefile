@@ -45,7 +45,7 @@ pthread: gaussian_blur_pthread.cpp
 
 #Rules for OpenMp Gaussian blur
 omp: gaussian_blur_omp.cpp
-	$(CPP) $(SOURCE3) -o $(TARGET3) $(CPP_FLAGS) $(LIBS) $(OPENCV)
+	$(CPP) $(SOURCE3) -o $(TARGET3) $(CPP_FLAGS) -fopenmp $(LIBS) $(OPENCV)
 
 #Rules for CUDA Gaussian blur
 cuda: gaussian_blur_cuda.cu
