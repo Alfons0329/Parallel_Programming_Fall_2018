@@ -42,11 +42,6 @@ unsigned char gaussian_filter(int w, int h,int shift, int img_border)
 			a = w + i/* - (ws / 2)*/;
 			b = h + j/* - (ws / 2)*/;
 
-			// detect for borders of the image
-			/*if (a < 0 || b < 0 || a >= img_width || b >= img_height)
-			{
-				continue;
-			} */
 			tmp += filter_G[j * ws + i] * pic_in_padded[3 * (b * (img_width+ws) + a) + shift];
 		}
 	}
@@ -64,11 +59,11 @@ unsigned char gaussian_filter(int w, int h,int shift, int img_border)
 
 unsigned char *padding_pic_for_clamp(unsigned char *pic_in, int img_width, int img_height, int FILTER_SIZE) {
 	int ws = (int)sqrt((int)FILTER_SIZE);
-	int half = (ws-1)/2;
-	ws = half*2+1;
+	int half = (ws - 1)/2;
+	ws = half * 2 + 1;
 	unsigned char *pic_out = (unsigned char*) malloc(sizeof(unsigned char[3]) * (img_width + ws) * (img_height + ws));
-	for (int i = 0; i < ws+img_height; i++) {
-		for (int j = 0; j < ws+img_width; j++) {
+	for (int i = 0; i < ws + img_height; i++) {
+		for (int j = 0; j < ws + img_width; j++) {
 			// clamp to edge
 			int y = i - half;
 			int x = j - half;
@@ -150,7 +145,7 @@ int main(int argc, char* argv[])
 
 		for (segment_cnt = 1; segment_cnt <= 10; segment_cnt++)
 		{
-			int seg_start = segment_cnt == 1 ? 0 : img_height * segment[segment_cnt-2];
+			int seg_start = segment_cnt == 1 ? 0 : img_height * segment[segment_cnt - 2];
 			int seg_end = img_height * segment[segment_cnt-1];
 			// magic parallel flag
 			#pragma omp parallel for
