@@ -4,6 +4,7 @@
 #include <iostream>
 #include <math.h>
 #include <string>
+#include <omp.h>
 
 // openCV libraries for showing the images dont change
 #include <opencv2/imgproc/imgproc.hpp>
@@ -15,15 +16,16 @@ using namespace cv;
 
 #define ull unsigned long long int
 
-#define MYRED	2
-#define MYGREEN 1
-#define MYBLUE	0
-int img_width, img_height;
-
+// variables for Gaussian filter
 int FILTER_SIZE;
 ull FILTER_SCALE;
 ull *filter_G;
 
+// variables for image processing
+#define MYRED	2
+#define MYGREEN 1
+#define MYBLUE	0
+int img_width, img_height;
 unsigned char *pic_in, *pic_in_padded, *pic_out;
 
 unsigned char gaussian_filter(int w, int h,int shift, int img_border)
@@ -58,7 +60,6 @@ unsigned char gaussian_filter(int w, int h,int shift, int img_border)
 		tmp = 255;
 	}
 	return (unsigned char)tmp;
-	// printf("Input %d Output %d img_birder %d filter_g %f\n", pic_in[3 * (h * img_width + w) + shift], tmp, img_border, filter_G[w % 35]);
 }
 
 unsigned char *padding_pic_for_clamp(unsigned char *pic_in, int img_width, int img_height, int FILTER_SIZE) {
