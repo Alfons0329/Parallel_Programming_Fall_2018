@@ -54,45 +54,8 @@ const char* histogram = "\
 __kernel void histogram(__global unsigned char* image_data, __global unsigned int* result_data, unsigned int size)\
 {\
     int idx = get_global_id(0);\
-        int i;\
-        switch(idx)\
-        {\
-            case 0 ... 255:\
-                           {\
-                               for (i = size - 3; i >= 0; i -= 3)\
-                               {\
-                                   if (idx == image_data[i])\
-                                   {\
-                                       result_data[idx]++;\
-                                   }\
-                               }\
-                               break;\
-                           }\
-            case 256 ... 511:\
-                             {\
-                                 for (i = size - 2; i >= 1; i -= 3)\
-                                 {\
-                                     if (idx - 256 == image_data[i])\
-                                     {\
-                                         result_data[idx]++;\
-                                     }\
-                                 }\
-                                 break;\
-                             }\
-            case 512 ... 767:\
-                             {\
-                                 for (i = size - 1; i >= 2; i -= 3)\
-                                 {\
-                                     if (idx - 512 == image_data[i])\ 
-                                     {\
-                                         result_data[idx]++;\
-                                     }\
-                                 }\
-                                 break;\
-                             }\
-            default:\
-                    break;\
-        }\
+    int pos = (idx % 3) << 8;\
+    atomic_inc(&result_data[pos + image_data[idx]]);\    
 }\
     ";
 
@@ -196,7 +159,8 @@ int main(int argc, char const *argv[])
     clSetKernelArg(kernel_core, 1, sizeof(cl_mem), &his_cl);
     clSetKernelArg(kernel_core, 2, sizeof(unsigned int), &input_size);
 
-    size_t work_size = 768;
+    size_t work_size = input_size;
+    printf("Work size %d \n", work_size);
     cl_err = clEnqueueNDRangeKernel(que, kernel_core, 1, 0, &work_size, 0, 0, NULL, NULL);
     if (cl_err == CL_SUCCESS)
     {

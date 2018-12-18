@@ -13,7 +13,7 @@ function Test
      then
          echo $1 is correct
      fi
-     rm input $2.out
+     rm input
  fi
 }
 
