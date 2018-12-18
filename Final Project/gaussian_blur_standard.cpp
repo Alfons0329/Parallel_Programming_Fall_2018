@@ -89,6 +89,9 @@ void write_and_show(BmpReader* bmpReader, string outputblur_name, int k)
 
     // show the output file
     Mat img = imread(outputblur_name);
+    namedWindow("Current progress", CV_WINDOW_AUTOSIZE);
+    int WIDTH = 1920, HEIGHT = 1080;
+    resizeWindow("Current progress", WIDTH, HEIGHT);
     imshow("Current progress", img);
     waitKey(20);
 }
