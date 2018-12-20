@@ -143,6 +143,20 @@ int main(int argc, char* argv[])
 		// write output BMP file
 		bmpReader->WriteBMP(outputblur_name.c_str(), img_width, img_height, pic_out);
 		write_and_show(bmpReader, outputblur_name, k);
+        
+        // if demo, decomment this to show until ESC is pressed, dont remove the following, just comment or decomment
+        /*
+        Mat img = imread(outputblur_name);
+        while(1)
+        {
+            imshow("Current progress", img);
+            if (waitKey(0) % 256 == 27)
+            {
+                break;
+            }
+        }
+        */
+ 
 		// free memory space
 		free(pic_in);
 		free(pic_out);

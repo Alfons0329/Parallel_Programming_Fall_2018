@@ -38,14 +38,14 @@ __global__ void cuda_gaussian_filter(unsigned char* cuda_input_image, unsigned c
     int cuda_width = blockIdx.x * blockDim.x + threadIdx.x;
     int cuda_height = blockIdx.y * blockDim.y + threadIdx.y;
 
-    int target = 0;
     unsigned long long int tmp = 0;
     int a, b;
-    
-    if (3 * (cuda_height * img_width + cuda_width) + shift >= img_border)
+
+    if (cuda_width >= img_width || cuda_height >= img_height)
     {
         return;
     }
+
     for (int j = 0; j  <  ws; j++)
 	{
 		for (int i = 0; i  <  ws; i++)
@@ -53,20 +53,6 @@ __global__ void cuda_gaussian_filter(unsigned char* cuda_input_image, unsigned c
 			a = cuda_width + i - (ws / 2);
 			b = cuda_height + j - (ws / 2);
             
-            /* THIS CAUSE ALL PICTURE TO BE BLACK ONE
-            
-            if (a < 0 || b < 0 || a >= img_width || b >= img_height)
-            {
-                continue;
-            }
-             
-            */
-			// detect for borders of the image
-            target = 3 * (b * img_width + a) + shift;
-            if (target >= img_border || target < 0)
-            {
-                continue;
-            }
 			tmp += cuda_filter_G[j * ws + i] * cuda_input_image[3 * (b * img_width + a) + shift]; 
 		}
     }
@@ -189,10 +175,12 @@ int main(int argc, char* argv[])
             printf("Failed with error part2 %s \n", cudaGetErrorString(cuda_err));
         }
 
-
+        // grid and block, divide the image into 1024 per block
+        const dim3 block_size((int)sqrt(TILE_WIDTH), (int) sqrt(TILE_WIDTH), 1);
+        const dim3 grid_size(img_width / block_size.x + 1, img_height / block_size.y + 1, 1);
         for (int i = 2; i >= 0; i--) //R G B channel respectively
         {
-            cuda_gaussian_filter<<<65535, TILE_WIDTH>>>(cuda_input_image, cuda_output_image, img_width, img_height, i, cuda_filter_G, (int)sqrt((int)FILTER_SIZE), FILTER_SCALE, resolution);
+            cuda_gaussian_filter<<<grid_size, block_size>>>(cuda_input_image, cuda_output_image, img_width, img_height, i, cuda_filter_G, (int)sqrt((int)FILTER_SIZE), FILTER_SCALE, resolution);
             cuda_err = cudaDeviceSynchronize();
 
             if(cuda_err != cudaSuccess)
