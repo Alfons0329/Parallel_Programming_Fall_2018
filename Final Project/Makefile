@@ -25,6 +25,12 @@ SOURCE_CM=create_matrix.cpp
 TARGET_CHECK=check.o
 SOURCE_CHECK=check_matrix.cpp
 
+#diff the cuda, unpadded pic
+TARGET_DIFF=diff.o
+SOURCE_DIFF=diff_image.cpp
+TARGET_UNPADDED=gb_std_unpadded.o
+SOURCE_UNPADDED=gaussian_blur_unpadded.cpp
+
 #------------------------Compiler and flag-----------------------#
 #Compilers
 CPP=g++
@@ -57,6 +63,11 @@ cuda: gaussian_blur_cuda.cu
 matrix: create_matrix.cpp
 	$(CPP) $(SOURCE_CM) -o $(TARGET_CM) $(CPP_FLAGS) 
 	$(CPP) $(SOURCE_CHECK) -o $(TARGET_CHECK) $(CPP_FLAGS) 
+
+diff: diff_image.cpp
+	$(CPP) $(SOURCE_DIFF) -o $(TARGET_DIFF) $(CPP_FLAGS) 
+	$(NVCC) $(SOURCE4) -o $(TARGET4) $(CPP_FLAGS) $(LIBS) $(OPENCV)
+	$(CPP) $(SOURCE_UNPADDED) -o $(TARGET_UNPADDED) $(CPP_FLAGS) $(OPENCV)
 
 
 .PHONY: clean

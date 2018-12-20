@@ -131,6 +131,22 @@ int main(int argc, char* argv[])
 
     // main part of Gaussian blur
     BmpReader* bmpReader = new BmpReader();
+
+    // platform information
+    int num = 0;
+    cudaError_t cudaStatus;
+    cudaStatus = cudaGetDeviceCount(&num);
+    cout << "Number of GPU: " << num << endl;
+
+    // get gpu properties
+    cudaDeviceProp prop;
+    if (num > 0)
+    {
+        cudaGetDeviceProperties(&prop, 0);
+        // get device name
+        cout << "Device: " <<prop.name << endl;
+    }
+
     for (int k = 1; k < argc; k++)
     {
 
@@ -173,7 +189,7 @@ int main(int argc, char* argv[])
 
         for (int i = 2; i >= 0; i--) //R G B channel respectively
         {
-            cuda_gaussian_filter<<<(resolution) / TILE_WIDTH, TILE_WIDTH>>>(cuda_input_image, cuda_output_image, img_width, img_height, i, cuda_filter_G, (int)sqrt((int)FILTER_SIZE), FILTER_SCALE, resolution);
+            cuda_gaussian_filter<<<65535, TILE_WIDTH>>>(cuda_input_image, cuda_output_image, img_width, img_height, i, cuda_filter_G, (int)sqrt((int)FILTER_SIZE), FILTER_SCALE, resolution);
             cuda_err = cudaDeviceSynchronize();
 
             if(cuda_err != cudaSuccess)
@@ -210,7 +226,9 @@ int main(int argc, char* argv[])
     cout << "name 2 3 " << inputfile_name2 << " , " << inputfile_name3 << endl;
     for (int j = 0; j < img_width * img_height * 3; j+=3)
     {
-        if(input_image2[j] != input_image3[j])
+        if(input_image2[j] != input_image3[j] 
+        || input_image2[j + 1] != input_image3[j + 1]
+        || input_image2[j + 2] != input_image3[j + 3])
         {
             printf("Normal %d, %d, %d Dim %d, %d, %d \n", input_image2[j], input_image2[j + 1], input_image2[j +2], input_image3[j], input_image3[j + 1], input_image3[j +2]);
         }
