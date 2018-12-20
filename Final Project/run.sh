@@ -27,6 +27,7 @@ else
         5)
             make matrix
             ./cm.o
+            ./check.o
             ;;
         7)
             make clean

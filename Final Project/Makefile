@@ -19,9 +19,11 @@ SOURCE4=gaussian_blur_cuda.cu
 TARGET5=gb_cuda_cv.o
 SOURCE5=gaussian_blur_cuda_cv.cu
 
-#Gaussian matrix generator
+#Gaussian matrix generator and check matrix
 TARGET_CM=cm.o
 SOURCE_CM=create_matrix.cpp
+TARGET_CHECK=check.o
+SOURCE_CHECK=check_matrix.cpp
 
 #------------------------Compiler and flag-----------------------#
 #Compilers
@@ -53,7 +55,8 @@ cuda: gaussian_blur_cuda.cu
 
 #Rules for Gaussian matrix generator
 matrix: create_matrix.cpp
-	$(CPP) $(SOURCE_CM) -o $(TARGET_CM) $(CPP_FLAGS) $(OPENCV)
+	$(CPP) $(SOURCE_CM) -o $(TARGET_CM) $(CPP_FLAGS) 
+	$(CPP) $(SOURCE_CHECK) -o $(TARGET_CHECK) $(CPP_FLAGS) 
 
 
 .PHONY: clean
