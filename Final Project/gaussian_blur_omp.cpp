@@ -167,7 +167,7 @@ int main(int argc, char* argv[])
         
 		write_and_show(bmpReader, outputblur_name, k);
         // if demo, decomment this to show until ESC is pressed
-        
+        /* 
 	    Mat img = imread(outputblur_name);
         while(1)
         {
@@ -177,7 +177,7 @@ int main(int argc, char* argv[])
                 break;
             }
         }
-        
+        */
 		// free memory space
 		free(pic_in);
 		free(pic_in_padded);

@@ -210,7 +210,7 @@ int main(int argc, char* argv[])
         outputblur_name = inputfile_name.substr(0, inputfile_name.size() - 4)+ "_blur_cuda.bmp";
         bmpReader->WriteBMP(outputblur_name.c_str(), img_width, img_height, output_image);
         // if demo, decomment this to show
-        write_and_show(bmpReader, outputblur_name, k);
+        // write_and_show(bmpReader, outputblur_name, k);
         // free memory space
         free(input_image);
         free(output_image);
