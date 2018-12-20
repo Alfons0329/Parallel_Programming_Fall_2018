@@ -54,12 +54,13 @@ __global__ void cuda_gaussian_filter(unsigned char* cuda_input_image, unsigned c
 			b = cuda_height + j - (ws / 2);
             
             /* THIS CAUSE ALL PICTURE TO BE BLACK ONE
+            
             if (a < 0 || b < 0 || a >= img_width || b >= img_height)
             {
                 continue;
             }
              
-             */
+            */
 			// detect for borders of the image
             target = 3 * (b * img_width + a) + shift;
             if (target >= img_border || target < 0)
@@ -71,10 +72,6 @@ __global__ void cuda_gaussian_filter(unsigned char* cuda_input_image, unsigned c
     }
     tmp /= FILTER_SCALE;
     
-    if (tmp < 0)
-    {
-        tmp = 0;
-    } 
     if (tmp > 255)
     {
         tmp = 255;
@@ -83,18 +80,21 @@ __global__ void cuda_gaussian_filter(unsigned char* cuda_input_image, unsigned c
     
 }
 // show the progress of gaussian segment by segment
-const float segment[] = { 0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f, 0.7f, 0.8f, 0.9f, 1.0f };
+// const float segment[] = { 0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f, 0.7f, 0.8f, 0.9f, 1.0f };
 void write_and_show(BmpReader* bmpReader, string outputblur_name, int k)
 {
-
-    // write output BMP file
-    outputblur_name = "input" + to_string(k) + "_blur.bmp";
     bmpReader->WriteBMP(outputblur_name.c_str(), img_width, img_height, output_image);
 
     // show the output file
     Mat img = imread(outputblur_name);
-    imshow("Current progress", img);
-    waitKey(20);
+    while(1)
+    {
+        imshow("Current progress", img);
+        if (waitKey(0) % 256 == 27)
+        {
+            break;
+        }
+    }
 }
 
 int main(int argc, char* argv[])
@@ -134,9 +134,7 @@ int main(int argc, char* argv[])
 
     // platform information
     int num = 0;
-    cudaError_t cudaStatus;
-    cudaStatus = cudaGetDeviceCount(&num);
-    cout << "Number of GPU: " << num << endl;
+    cudaGetDeviceCount(&num);
 
     // get gpu properties
     cudaDeviceProp prop;
@@ -146,6 +144,11 @@ int main(int argc, char* argv[])
         // get device name
         cout << "Device: " <<prop.name << endl;
     }
+    else
+    {
+        printf("No NVIDIA GPU detected! \n");
+        return 1;
+    }
 
     for (int k = 1; k < argc; k++)
     {
@@ -153,7 +156,7 @@ int main(int argc, char* argv[])
         // read input BMP file
         inputfile_name = argv[k];
         input_image = bmpReader -> ReadBMP(inputfile_name.c_str(), &img_width, &img_height);
-        printf("Filter scale = %llu and image size W = %d, H = %d\n", FILTER_SCALE, img_width, img_height);
+        printf("Filter scale = %llu, filter size %d x %d and image size W = %d, H = %d\n", FILTER_SCALE, (int)sqrt(FILTER_SIZE), (int)sqrt(FILTER_SIZE), img_width, img_height);
 
         // allocate space for output image
         int resolution = 3 * (img_width * img_height); //padding
@@ -206,6 +209,8 @@ int main(int argc, char* argv[])
         // write output BMP file
         outputblur_name = inputfile_name.substr(0, inputfile_name.size() - 4)+ "_blur_cuda.bmp";
         bmpReader->WriteBMP(outputblur_name.c_str(), img_width, img_height, output_image);
+        // if demo, decomment this to show
+        write_and_show(bmpReader, outputblur_name, k);
         // free memory space
         free(input_image);
         free(output_image);

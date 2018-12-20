@@ -131,7 +131,7 @@ int main(int argc, char* argv[])
 		// read input BMP file
 		inputfile_name = argv[k];
 		pic_in = bmpReader -> ReadBMP(inputfile_name.c_str(), &img_width, &img_height);
-		printf("Filter scale = %llu and image size W = %d, H = %d\n", FILTER_SCALE, img_width, img_height);
+        printf("Filter scale = %llu, filter size %d x %d and image size W = %d, H = %d\n", FILTER_SCALE, (int)sqrt(FILTER_SIZE), (int)sqrt(FILTER_SIZE), img_width, img_height);
 		pic_in_padded = padding_pic_for_clamp(pic_in, img_width, img_height, FILTER_SIZE);
 
 		int resolution = 3 * (img_width * img_height);
@@ -159,12 +159,25 @@ int main(int argc, char* argv[])
 				}
 			}
 			// show the progress of image every 10% of work progress
-			printf("Show segment %d with j is now %d \n", segment_cnt, seg_end-1);
+			// printf("Show segment %d with j is now %d \n", segment_cnt, seg_end-1);
 			write_and_show(bmpReader, outputblur_name, k);
 		}
 		// write output BMP file
 		bmpReader->WriteBMP(outputblur_name.c_str(), img_width, img_height, pic_out);
+        
 		write_and_show(bmpReader, outputblur_name, k);
+        // if demo, decomment this to show until ESC is pressed
+        
+	    Mat img = imread(outputblur_name);
+        while(1)
+        {
+            imshow("Current progress", img);
+            if (waitKey(0) % 256 == 27)
+            {
+                break;
+            }
+        }
+        
 		// free memory space
 		free(pic_in);
 		free(pic_in_padded);

@@ -11,7 +11,7 @@ else
     case $choose in
         1)
             make standard
-            time taskset -c 1 ./gb_std.o $1
+            time taskset -c 1 ./gb_std_unpadded.o $1
             ;;
         2)
             make pthread

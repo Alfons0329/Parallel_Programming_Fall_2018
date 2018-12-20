@@ -158,7 +158,7 @@ int main(int argc, char* argv[])
             // show the progress of image every 10% of work progress
             if (j >= segment[segment_cnt - 1] * img_height && j <= segment[segment_cnt] * img_height)
             {
-                printf("Show segment %d with j is now %d \n", segment_cnt, j);
+                // printf("Show segment %d with j is now %d \n", segment_cnt, j);
                 write_and_show(bmpReader, outputblur_name, k);
                 segment_cnt = (segment_cnt >= 10) ? segment_cnt : segment_cnt + 1;   
             }
