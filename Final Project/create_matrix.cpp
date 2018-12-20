@@ -6,7 +6,7 @@
 #define ull unsigned long long int
 using namespace std; 
 int matrix_size;
-const float sigma = 5.0f; 
+const float sigma = 15.0f; 
 const ull RATE = 1e8;
 void FilterCreation(vector<vector <float> >& GKernel) 
 { 
