@@ -137,7 +137,7 @@ int main(int argc, char* argv[])
 				}
 			}
 			// show the progress of image every 10% of work progress
-			printf("Show segment %d with j is now %d \n", segment_cnt, seg_end-1);
+			// printf("Show segment %d with j is now %d \n", segment_cnt, seg_end-1);
 			write_and_show(bmpReader, outputblur_name, k);
 		}
 		// write output BMP file
