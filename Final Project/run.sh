@@ -22,7 +22,16 @@ else
             ;;
         4)
             make cuda
-            time ./gb_cuda.o $1
+            read -p "Test thread in 4 16 64 256 1024 vs time? 1 no 2 yes " yn
+            if [ $yn -eq 1 ];
+            then
+                time ./gb_cuda.o $1
+            else
+                for i in 4 16 64 256 1024;
+                do
+                    time ./gb_cuda.o $1 $i
+                done
+            fi
             ;;
         5)
             make matrix

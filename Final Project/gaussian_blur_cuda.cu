@@ -85,7 +85,7 @@ void write_and_show(BmpReader* bmpReader, string outputblur_name, int k)
 
 int main(int argc, char* argv[])
 {
-    TILE_WIDTH = 1024;
+    TILE_WIDTH = 64;
 
     // read input filename
     string inputfile_name;
@@ -95,6 +95,11 @@ int main(int argc, char* argv[])
     {
         printf("Please provide filename for Gaussian Blur. usage ./gb_std.o <BMP image file>");
         return 1;
+    }
+    else if (argc == 3)
+    {
+        sscanf(argv[2], "%d", &TILE_WIDTH);
+        printf("Testing with %d threads in each CUDA block\n", TILE_WIDTH);
     }
 
     // read Gaussian mask file from system
@@ -136,7 +141,7 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    for (int k = 1; k < argc; k++)
+    for (int k = 1; k <= 2; k++)
     {
 
         // read input BMP file
@@ -164,6 +169,10 @@ int main(int argc, char* argv[])
         if(cuda_err != cudaSuccess || cuda_err2 != cudaSuccess || cuda_err3 != cudaSuccess)
         {
             printf("Failed with error part1 %s \n", cudaGetErrorString(cuda_err));
+            printf("Failed with error part1 err2: %s \n", cudaGetErrorString(cuda_err2));
+            printf("Failed with error part1 err3: %s \n", cudaGetErrorString(cuda_err3));
+            return 1;
+ 
         }
 
         // copy memory from host to GPU
@@ -172,7 +181,10 @@ int main(int argc, char* argv[])
         cuda_err3 = cudaMemcpy(cuda_filter_G, filter_G, FILTER_SIZE* sizeof(unsigned long long int), cudaMemcpyHostToDevice);
         if(cuda_err != cudaSuccess || cuda_err2 != cudaSuccess || cuda_err3 != cudaSuccess)
         {
-            printf("Failed with error part2 %s \n", cudaGetErrorString(cuda_err));
+            printf("Failed with error part2 err: %s \n", cudaGetErrorString(cuda_err));
+            printf("Failed with error part2 err2: %s \n", cudaGetErrorString(cuda_err2));
+            printf("Failed with error part2 err3: %s \n", cudaGetErrorString(cuda_err3));
+            return 2;
         }
 
         // grid and block, divide the image into 1024 per block
@@ -186,7 +198,7 @@ int main(int argc, char* argv[])
             if(cuda_err != cudaSuccess)
             {
                 printf("Failed with error part3 %s \n", cudaGetErrorString(cuda_err));
-                return -1;
+                return 3;
             }
         }
 
