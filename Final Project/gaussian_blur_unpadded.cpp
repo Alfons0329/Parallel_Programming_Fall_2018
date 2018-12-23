@@ -14,7 +14,7 @@
 using namespace std;
 using namespace cv;
 
-#define ull unsigned long long int
+#define uint32 unsigned int
 
 #define MYRED	2
 #define MYGREEN 1
@@ -22,8 +22,8 @@ using namespace cv;
 int img_width, img_height;
 
 int FILTER_SIZE;
-ull FILTER_SCALE;
-ull *filter_G;
+uint32 FILTER_SCALE;
+uint32 *filter_G;
 
 unsigned char *pic_in, *pic_out;
 
@@ -31,7 +31,7 @@ unsigned char gaussian_filter(int w, int h,int shift, int img_border)
 {
     int ws = (int)sqrt((int)FILTER_SIZE);
     int target = 0;
-    ull tmp = 0;
+    uint32 tmp = 0;
     int a, b;
 
     for (int j = 0; j  <  ws; j++)
@@ -59,7 +59,6 @@ unsigned char gaussian_filter(int w, int h,int shift, int img_border)
         tmp = 255;
     }
     return (unsigned char)tmp;
-    // printf("Input %d Output %d img_birder %d filter_g %f\n", pic_in[3 * (h * img_width + w) + shift], tmp, img_border, filter_G[w % 35]);
 }
 // show the progress of gaussian segment by segment
 const float segment[] = { 0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f, 0.7f, 0.8f, 0.9f, 1.0f };
@@ -89,11 +88,11 @@ int main(int argc, char* argv[])
     FILE* mask;
     mask = fopen("mask_Gaussian.txt", "r");
     fscanf(mask, "%d", &FILTER_SIZE);
-    filter_G = new unsigned long long [FILTER_SIZE];
+    filter_G = new uint32 [FILTER_SIZE];
 
     for (int i = 0; i < FILTER_SIZE; i++)
     {
-        fscanf(mask, "%llu", &filter_G[i]);
+        fscanf(mask, "%u", &filter_G[i]);
     }
 
     FILTER_SCALE = 0; //recalculate
@@ -111,7 +110,7 @@ int main(int argc, char* argv[])
         // read input BMP file
         inputfile_name = argv[k];
         pic_in = bmpReader -> ReadBMP(inputfile_name.c_str(), &img_width, &img_height);
-        printf("Filter scale = %llu, filter size %d x %d and image size W = %d, H = %d\n", FILTER_SCALE, (int)sqrt(FILTER_SIZE), (int)sqrt(FILTER_SIZE), img_width, img_height);
+        printf("Filter scale = %u, filter size %d x %d and image size W = %d, H = %d\n", FILTER_SCALE, (int)sqrt(FILTER_SIZE), (int)sqrt(FILTER_SIZE), img_width, img_height);
 
         int resolution = 3 * (img_width * img_height);
         // allocate space for output image
@@ -160,8 +159,6 @@ int main(int argc, char* argv[])
         free(pic_in);
         free(pic_out);
     }
-
-
 
     return 0;
 }
