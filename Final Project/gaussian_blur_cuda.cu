@@ -16,7 +16,7 @@
 using namespace std;
 using namespace cv;
 
-#define ull unsigned long long int
+#define ul unsigned long int
 
 #define MYRED	2
 #define MYGREEN 1
@@ -24,21 +24,21 @@ using namespace cv;
 int img_width, img_height;
 
 int FILTER_SIZE;
-ull FILTER_SCALE;
-ull *filter_G;
+ul FILTER_SCALE;
+ul *filter_G;
 
 unsigned char *input_image, *pic_blur, *output_image;
 
 // variables for cuda parallel processing
 int TILE_WIDTH;
 
-__global__ void cuda_gaussian_filter(unsigned char* cuda_input_image, unsigned char* cuda_output_image,int img_width, int img_height, int shift, unsigned long long int* cuda_filter_G, int ws, unsigned long long int FILTER_SCALE, int img_border)
+__global__ void cuda_gaussian_filter(unsigned char* cuda_input_image, unsigned char* cuda_output_image,int img_width, int img_height, int shift, ul* cuda_filter_G, int ws, ul FILTER_SCALE, int img_border)
 {
     // for CUDA parallelization
     int cuda_width = blockIdx.x * blockDim.x + threadIdx.x;
     int cuda_height = blockIdx.y * blockDim.y + threadIdx.y;
 
-    unsigned long long int tmp = 0;
+    ul tmp = 0;
     int a, b;
 
     if (cuda_width >= img_width || cuda_height >= img_height)
@@ -106,11 +106,11 @@ int main(int argc, char* argv[])
     FILE* mask;
     mask = fopen("mask_Gaussian.txt", "r");
     fscanf(mask, "%d", &FILTER_SIZE);
-    filter_G = new unsigned long long [FILTER_SIZE];
+    filter_G = new ul [FILTER_SIZE];
 
     for (int i = 0; i < FILTER_SIZE; i++)
     {
-        fscanf(mask, "%llu", &filter_G[i]);
+        fscanf(mask, "%lu", &filter_G[i]);
     }
 
     FILTER_SCALE = 0; //recalculate
@@ -145,7 +145,7 @@ int main(int argc, char* argv[])
     // read input BMP file
     inputfile_name = argv[1];
     input_image = bmpReader -> ReadBMP(inputfile_name.c_str(), &img_width, &img_height);
-    printf("Filter scale = %llu, filter size %d x %d and image size W = %d, H = %d\n", FILTER_SCALE, (int)sqrt(FILTER_SIZE), (int)sqrt(FILTER_SIZE), img_width, img_height);
+    printf("Filter scale = %lu, filter size %d x %d and image size W = %d, H = %d\n", FILTER_SCALE, (int)sqrt(FILTER_SIZE), (int)sqrt(FILTER_SIZE), img_width, img_height);
 
     // allocate space for output image
     int resolution = 3 * (img_width * img_height); //padding
@@ -160,10 +160,10 @@ int main(int argc, char* argv[])
 
     unsigned char* cuda_input_image;
     unsigned char* cuda_output_image;
-    unsigned long long int* cuda_filter_G;
+    ul* cuda_filter_G;
     cuda_err = cudaMalloc((void**) &cuda_input_image, resolution * sizeof(unsigned char));
     cuda_err2 = cudaMalloc((void**) &cuda_output_image, resolution * sizeof(unsigned char));
-    cuda_err3 = cudaMalloc((void**) &cuda_filter_G, FILTER_SIZE * sizeof(unsigned long long int)); //dont forget to allocate space for it
+    cuda_err3 = cudaMalloc((void**) &cuda_filter_G, FILTER_SIZE * sizeof(ul)); //dont forget to allocate space for it
     if(cuda_err != cudaSuccess || cuda_err2 != cudaSuccess || cuda_err3 != cudaSuccess)
     {
         printf("Failed with error part1 %s \n", cudaGetErrorString(cuda_err));
@@ -176,7 +176,7 @@ int main(int argc, char* argv[])
     // copy memory from host to GPU
     cuda_err = cudaMemcpy(cuda_input_image, input_image, resolution * sizeof(unsigned char), cudaMemcpyHostToDevice);
     cuda_err2 = cudaMemcpy(cuda_output_image, output_image, resolution * sizeof(unsigned char), cudaMemcpyHostToDevice);
-    cuda_err3 = cudaMemcpy(cuda_filter_G, filter_G, FILTER_SIZE* sizeof(unsigned long long int), cudaMemcpyHostToDevice);
+    cuda_err3 = cudaMemcpy(cuda_filter_G, filter_G, FILTER_SIZE* sizeof(ul), cudaMemcpyHostToDevice);
     if(cuda_err != cudaSuccess || cuda_err2 != cudaSuccess || cuda_err3 != cudaSuccess)
     {
         printf("Failed with error part2 err: %s \n", cudaGetErrorString(cuda_err));
