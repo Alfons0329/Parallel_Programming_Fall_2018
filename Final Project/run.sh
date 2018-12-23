@@ -36,11 +36,20 @@ else
             read -p "Test shared memory CUDA Gaussian Blur? 1 no 2 yes " yn
             if [ $yn -eq 2 ];
             then
-                make cuda_shm
-                printf "\nNon shared memory Gaussian Blur: "
-                time ./gb_cuda.o $1
-                printf "\nShared memory Gaussian Blur: "
-                time ./gb_cuda_shm.o $1
+                read -p "Test thread in 4 16 64 256 1024 vs time? 1 no 2 yes " yn
+                if [ $yn -eq 1 ];
+                then
+                    time ./gb_cuda.o $1
+                else
+                    make cuda_shm
+                    for i in 4 16 64 256 1024;
+                    do
+                        printf "\nNon shared memory Gaussian Blur: "
+                        time ./gb_cuda.o $1 $i
+                        printf "\nShared memory Gaussian Blur: "
+                        time ./gb_cuda_shm.o $1 $i
+                    done
+                fi
             fi
             ;;
         5)
