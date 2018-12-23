@@ -118,7 +118,7 @@ int main(int argc, char* argv[])
 		//apply the Gaussian filter to the image, RGB respectively
 		string tmp(inputfile_name);
 		int segment_cnt = 1;
-		outputblur_name = inputfile_name.substr(0, inputfile_name.size() - 4)+ "_blur.bmp";
+		outputblur_name = inputfile_name.substr(0, inputfile_name.size() - 4)+ "_blur_omp.bmp";
 
 		for (segment_cnt = 1; segment_cnt <= 10; segment_cnt++)
 		{
