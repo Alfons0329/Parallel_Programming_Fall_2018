@@ -39,14 +39,14 @@ else
                 read -p "Test thread in 4 16 64 256 1024 vs time? 1 no 2 yes " yn
                 if [ $yn -eq 1 ];
                 then
-                    time ./gb_cuda.o $1
+                    time ./gb_cuda_shm.o $1
                 else
                     make cuda_shm
                     for i in 4 16 64 256 1024;
                     do
-                        printf "\nNon shared memory Gaussian Blur: "
+                        printf "\nGaussian Blur without constant memory: "
                         time ./gb_cuda.o $1 $i
-                        printf "\nShared memory Gaussian Blur: "
+                        printf "\nGaussian Blur with constant memory "
                         time ./gb_cuda_shm.o $1 $i
                     done
                 fi
@@ -72,8 +72,10 @@ else
             time taskset -c 1 ./gb_std_unpadded.o $1
             printf "\nOpenMP: "
             time ./gb_omp.o $1
-            printf "\nCUDA: "
+            printf "\nCUDA without constant memory: "
             time ./gb_cuda.o $1
+            printf "\n CUDA with constant memory: "
+            time ./gb_cuda_shm.o $1
             ;;
         9)
             make clean

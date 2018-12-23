@@ -157,7 +157,7 @@ int main(int argc, char* argv[])
 
     //---------------------CUDA main part-------------------------//
     // allocate space
-    cudaError_t cuda_err, cuda_err2, cuda_err3, cuda_err4;
+    cudaError_t cuda_err, cuda_err2, cuda_err4;
 
     unsigned char* cuda_input_image;
     unsigned char* cuda_output_image;
