@@ -32,6 +32,16 @@ else
                     time ./gb_cuda.o $1 $i
                 done
             fi
+
+            read -p "Test shared memory CUDA Gaussian Blur? 1 no 2 yes " yn
+            if [ $yn -eq 2 ];
+            then
+                make cuda_shm
+                echo "Non shared memory Gaussian Blur: "
+                time ./gb_cuda.o $1
+                echo "Shared memory Gaussian Blur: "
+                time ./gb_cuda_shm.o $1
+            fi
             ;;
         5)
             make matrix
