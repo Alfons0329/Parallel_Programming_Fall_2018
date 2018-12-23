@@ -85,7 +85,7 @@ void write_and_show(BmpReader* bmpReader, string outputblur_name, int k)
 
 int main(int argc, char* argv[])
 {
-    TILE_WIDTH = 64;
+    TILE_WIDTH = 1024;
 
     // read input filename
     string inputfile_name;

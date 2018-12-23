@@ -6,7 +6,7 @@ then
     echo "Please provide filename for Gaussian Blur. usage . / run.sh <BMP image file1>"
 else
 
-    read -p "1: Standard, 2: pthread, 3: OpenMP, 4: CUDA, 5: Generate Gaussian Matrix, 6: OpenCL, 7: Diff CUDA output vs serial (standard) output, 8: Clean output files " choose
+    read -p "1: Standard, 2: pthread, 3: OpenMP, 4: CUDA, 5: Generate Gaussian Matrix, 6: OpenCL, 7: Diff CUDA output vs serial (standard) output, 8: Run all platform at once, 9: Clean output files " choose
 
     case $choose in
         1)
@@ -58,6 +58,12 @@ else
             ./diff.o $1
             ;;
         8)
+            make all
+            time taskset -c 1 ./gb_std_unpadded.o $1
+            time ./gb_omp $1
+            time ./gb_cuda.o $1
+            
+        9)
             make clean
             ;;
         *)

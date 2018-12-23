@@ -48,7 +48,7 @@ OPENCV=`pkg-config --cflags --libs opencv`
 
 #---------------------------Rules-------------------------------#
 #Rules for standard Gaussian Blur (serial version)
-all: standard omp cuda diff
+all: standard omp cuda 
 
 standard: gaussian_blur_unpadded.cpp
 	$(CPP) $(SOURCE_UNPADDED) -o $(TARGET_UNPADDED) $(CPP_FLAGS) $(OPENCV)
