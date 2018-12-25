@@ -51,6 +51,9 @@ else
                     done
                 fi
             fi
+
+            ./diff.o $1
+            
             ;;
         5)
             make matrix
