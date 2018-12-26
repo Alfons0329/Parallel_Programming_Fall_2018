@@ -10,12 +10,12 @@
 #include <CL/cl.h>
 
 // openCV libraries for showing the images dont change
-// #include <opencv2/imgproc/imgproc.hpp>
-// #include <opencv2/core/core.hpp>
-// #include <opencv2/opencv.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/opencv.hpp>
 
 using namespace std;
-// using namespace cv;
+using namespace cv;
 
 #define uint32 unsigned int
 
@@ -37,11 +37,11 @@ void write_and_show(BmpReader* bmpReader, string outputblur_name, int k)
 	bmpReader->WriteBMP(outputblur_name.c_str(), img_width, img_height, pic_out);
 
 	// show the output file
-    /*
+    
 	Mat img = imread(outputblur_name);
 	imshow("Current progress", img);
 	waitKey(20);
-    */
+    
 }
 
 int main(int argc, char* argv[])
@@ -201,9 +201,9 @@ int main(int argc, char* argv[])
         if(err_readbuffer != CL_SUCCESS) std::cerr << "[Error] clEnqueueReadBuffer" << std::endl;
         
         outputblur_name = inputfile_name.substr(0, inputfile_name.size() - 4)+ "_blur_opencl.bmp";
-        bmpReader->WriteBMP(outputblur_name.c_str(), img_width, img_height, pic_out);
+        // bmpReader->WriteBMP(outputblur_name.c_str(), img_width, img_height, pic_out);
 
-        // write_and_show(bmpReader, outputblur_name, k);
+        write_and_show(bmpReader, outputblur_name, k);
         // if demo, decomment this to show until ESC is pressed
 
         /* 

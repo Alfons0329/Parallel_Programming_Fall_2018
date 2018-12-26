@@ -76,7 +76,7 @@ cuda_shm: gaussian_blur_cuda_shm.cu
 
 #Rules for OpneCL Gaussian Blur
 opencl: gaussian_blur_opencl.cpp 
-	$(CPP) $(SOURCE6) -o $(TARGET6) $(CPP_FLAGS) $(OPENCL_LIBS) $(OPENCV)
+	$(CPP) $(SOURCE6) -o $(TARGET6) $(CPP_FLAGS) $(OPENCV) $(OPENCL_LIBS) 
 
 #Rules for Gaussian matrix generator
 matrix: create_matrix.cpp
