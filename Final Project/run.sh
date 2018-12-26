@@ -53,7 +53,7 @@ else
             fi
 
             ./diff.o $1
-            
+
             ;;
         5)
             make matrix
@@ -61,6 +61,8 @@ else
             ./check.o
             ;;
         6)
+            make opencl
+            time ./gb_opencl.o $1
             ;;
 
         7)
@@ -77,8 +79,10 @@ else
             time ./gb_omp.o $1
             printf "\nCUDA without constant memory: "
             time ./gb_cuda.o $1
-            printf "\n CUDA with constant memory: "
+            printf "\nCUDA with constant memory: "
             time ./gb_cuda_shm.o $1
+            printf "\nOpenCL: "
+            time ./gb_opencl.o $1
             ;;
         9)
             make clean

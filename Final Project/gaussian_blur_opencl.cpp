@@ -200,7 +200,7 @@ int main(int argc, char* argv[])
         err_readbuffer = clEnqueueReadBuffer(cmd_queue, out_img_mem, CL_TRUE, 0, 3 * img_width * img_height * sizeof(unsigned char), pic_out, 0, 0, 0);
         if(err_readbuffer != CL_SUCCESS) std::cerr << "[Error] clEnqueueReadBuffer" << std::endl;
         
-        outputblur_name = inputfile_name.substr(0, inputfile_name.size() - 4)+ "_blur_unpadded.bmp";
+        outputblur_name = inputfile_name.substr(0, inputfile_name.size() - 4)+ "_blur_opencl.bmp";
         bmpReader->WriteBMP(outputblur_name.c_str(), img_width, img_height, pic_out);
 
         // write_and_show(bmpReader, outputblur_name, k);

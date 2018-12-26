@@ -7,7 +7,7 @@ int main(int argc, char* argv[])
 {
     string unpadded(argv[1]);
     string f_name1 = unpadded.substr(0, unpadded.size() - 4) + "_blur_unpadded.bmp";
-    string f_name2 = unpadded.substr(0, unpadded.size() - 4) + "_blur_cuda.bmp";
+    string f_name2 = unpadded.substr(0, unpadded.size() - 4) + "_blur_opencl.bmp";
 
 
     ifstream f1;
