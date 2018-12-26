@@ -161,7 +161,7 @@ int main(int argc, char* argv[])
         for (int i = 2; i >= 0; i--)
         {
 			cl_int err;
-			size_t global_work_size = img_width * img_height;
+			size_t global_work_size[2] = {(size_t) img_width, (size_t) img_height};
         	cl_int err_kernel;
             kernel[i] = clCreateKernel(program, "cl_gaussian_filter", &err_kernel);
             if(err_kernel != CL_SUCCESS) std::cerr << "[Error] clCreateKernel" << std::endl; 
@@ -185,7 +185,7 @@ int main(int argc, char* argv[])
             err_args = clSetKernelArg(kernel[i], 7, sizeof(filter_scale_mem), &filter_scale_mem);
             if(err_args != CL_SUCCESS) std::cerr << "[Error] clSetKernelArg" << std::endl;
 
-			err = clEnqueueNDRangeKernel(cmd_queue, kernel[i], 2, 0, &global_work_size, 0, 0, 0, 0);
+			err = clEnqueueNDRangeKernel(cmd_queue, kernel[i], 2, 0, global_work_size, 0, 0, 0, 0);
 
 			if(err != CL_SUCCESS)
 			{
