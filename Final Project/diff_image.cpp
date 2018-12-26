@@ -43,8 +43,8 @@ int main(int argc, char* argv[])
         }
     }
     int img_size = img_width * img_height;
-    printf("Unpadded image, check difference in %s and %s with size of W: %d. H: %d \
-            \nGot %d diffs in %d points rate %f \n", f_name1.c_str(), f_name2.c_str(), img_width, img_height, diff_cnt, img_size, (float) diff_cnt / (float) img_size);
+    printf("Serial image, check difference in %s and %s with size of W: %d. H: %d \
+            \nGot %d diffs in %d points rate %3.1f percent \n", f_name1.c_str(), f_name2.c_str(), img_width, img_height, diff_cnt, img_size, (float) diff_cnt * 100.0f / (float) img_size);
     return 0;
 }
 
