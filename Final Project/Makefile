@@ -23,6 +23,10 @@ SOURCE4_SHM=gaussian_blur_cuda_shm.cu
 TARGET5=gb_cuda_cv.o
 SOURCE5=gaussian_blur_cuda_cv.cu
 
+#CUDA Gaussian Blur
+TARGET6=gb_opencl.o
+SOURCE6=gaussian_blur_opencl.cpp
+
 #Gaussian matrix generator and check matrix
 TARGET_CM=cm.o
 SOURCE_CM=create_matrix.cpp
@@ -42,13 +46,14 @@ MPICC=mpicc
 NVCC=nvcc
 #LIBS and FLAGS
 PTHREAD_LIBS=-pthread 
+OPENCL_LIBS=-lOpenCL
 OTHER_LINS=-lm
 CPP_FLAGS=-std=c++11 
 OPENCV=`pkg-config --cflags --libs opencv`
 
 #---------------------------Rules-------------------------------#
 #Rules for standard Gaussian Blur (serial version)
-all: standard omp cuda cuda_shm
+all: standard omp cuda cuda_shm opencl
 
 standard: gaussian_blur_unpadded.cpp
 	$(CPP) $(SOURCE_UNPADDED) -o $(TARGET_UNPADDED) $(CPP_FLAGS) $(OPENCV)
@@ -68,6 +73,10 @@ cuda: gaussian_blur_cuda.cu
 #Rules for CUDA Gaussian Blur with shared memory implementation
 cuda_shm: gaussian_blur_cuda_shm.cu
 	$(NVCC) $(SOURCE4_SHM) -o $(TARGET4_SHM) $(CPP_FLAGS) $(LIBS) $(OPENCV)
+
+#Rules for OpneCL Gaussian Blur
+opencl: gaussian_blur_opencl.cpp 
+	$(CPP) $(SOURCE6) -o $(TARGET6) $(CPP_FLAGS) $(OPENCL_LIBS) 
 
 #Rules for Gaussian matrix generator
 matrix: create_matrix.cpp
