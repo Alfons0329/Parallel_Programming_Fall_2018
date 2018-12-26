@@ -33,12 +33,13 @@ else
                 done
             fi
 
-            read -p "Test shared memory CUDA Gaussian Blur? 1 no 2 yes " yn
+            read -p "Test constant memory CUDA Gaussian Blur? 1 no 2 yes " yn
             if [ $yn -eq 2 ];
             then
                 read -p "Test thread in 4 16 64 256 1024 vs time? 1 no 2 yes " yn
                 if [ $yn -eq 1 ];
                 then
+                    make cuda_shm
                     time ./gb_cuda_shm.o $1
                 else
                     make cuda_shm
@@ -52,7 +53,7 @@ else
                 fi
             fi
 
-            ./diff.o $1
+            #./diff.o $1
 
             ;;
         5)
