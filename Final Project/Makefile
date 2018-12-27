@@ -15,9 +15,13 @@ SOURCE3=gaussian_blur_omp.cpp
 TARGET4=gb_cuda.o
 SOURCE4=gaussian_blur_cuda.cu
 
-#CUDA Gaussian Blur with shared memory implementation
+#CUDA Gaussian Blur with constant memory implementation
 TARGET4_SHM=gb_cuda_shm.o
 SOURCE4_SHM=gaussian_blur_cuda_shm.cu
+
+#CUDA Gaussian Blur with constant memory and stream pipeline implementation
+TARGET4_STM=gb_cuda_stream.o
+SOURCE4_STM=gaussian_blur_cuda_stream.cu
 
 #CUDA Gaussian Blur with OpenCV
 TARGET5=gb_cuda_cv.o
@@ -73,6 +77,9 @@ cuda: gaussian_blur_cuda.cu
 #Rules for CUDA Gaussian Blur with shared memory implementation
 cuda_shm: gaussian_blur_cuda_shm.cu
 	$(NVCC) $(SOURCE4_SHM) -o $(TARGET4_SHM) $(CPP_FLAGS) $(LIBS) $(OPENCV)
+
+cuda_stream: gaussian_blur_cuda_stream.cu
+	$(NVCC) $(SOURCE4_STM) -o $(TARGET4_STM) $(CPP_FLAGS) $(LIBS) $(OPENCV)
 
 #Rules for OpneCL Gaussian Blur
 opencl: gaussian_blur_opencl.cpp 
