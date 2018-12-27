@@ -203,7 +203,7 @@ int main(int argc, char* argv[])
         outputblur_name = inputfile_name.substr(0, inputfile_name.size() - 4)+ "_blur_opencl.bmp";
         // bmpReader->WriteBMP(outputblur_name.c_str(), img_width, img_height, pic_out);
 
-        write_and_show(bmpReader, outputblur_name, k);
+        // write_and_show(bmpReader, outputblur_name, k);
         // if demo, decomment this to show until ESC is pressed
 
         /* 
