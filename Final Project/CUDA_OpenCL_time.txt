@@ -1,0 +1,149 @@
+CUDA vs OpenCL run times: 10
+nvcc gaussian_blur_cuda.cu -o gb_cuda.o -std=c++11   `pkg-config --cflags --libs opencv`
+g++ gaussian_blur_opencl.cpp -o gb_opencl.o -std=c++11  `pkg-config --cflags --libs opencv` -lOpenCL 
+g++ create_matrix.cpp -o cm.o -std=c++11  
+g++ check_matrix.cpp -o check.o -std=c++11  
+Input matrix size: 101
+Input stddev: matrix = 101 , stddev = 15.000000 
+max 7084, nonzero 9921 in 10202 rate 0.972456 
+CUDA
+Device: GeForce GTX 1070
+Filter scale = 9994988, filter size 101 x 101 and image size W = 7680, H = 4320
+
+real	0m5.940s
+user	0m4.001s
+sys	0m1.905s
+OpenCL
+Initialize without error!
+Filter scale = 9994988, filter size 101 x 101 and image size W = 7680, H = 4320
+
+real	0m5.545s
+user	0m3.796s
+sys	0m1.744s
+CUDA
+Device: GeForce GTX 1070
+Filter scale = 9994988, filter size 101 x 101 and image size W = 7680, H = 4320
+
+real	0m5.862s
+user	0m3.973s
+sys	0m1.855s
+OpenCL
+Initialize without error!
+Filter scale = 9994988, filter size 101 x 101 and image size W = 7680, H = 4320
+
+real	0m5.532s
+user	0m3.742s
+sys	0m1.787s
+CUDA
+Device: GeForce GTX 1070
+Filter scale = 9994988, filter size 101 x 101 and image size W = 7680, H = 4320
+
+real	0m5.869s
+user	0m4.025s
+sys	0m1.807s
+OpenCL
+Initialize without error!
+Filter scale = 9994988, filter size 101 x 101 and image size W = 7680, H = 4320
+
+real	0m5.553s
+user	0m3.771s
+sys	0m1.780s
+CUDA
+Device: GeForce GTX 1070
+Filter scale = 9994988, filter size 101 x 101 and image size W = 7680, H = 4320
+
+real	0m5.885s
+user	0m3.925s
+sys	0m1.923s
+OpenCL
+Initialize without error!
+Filter scale = 9994988, filter size 101 x 101 and image size W = 7680, H = 4320
+
+real	0m5.563s
+user	0m3.810s
+sys	0m1.749s
+CUDA
+Device: GeForce GTX 1070
+Filter scale = 9994988, filter size 101 x 101 and image size W = 7680, H = 4320
+
+real	0m5.897s
+user	0m3.982s
+sys	0m1.875s
+OpenCL
+Initialize without error!
+Filter scale = 9994988, filter size 101 x 101 and image size W = 7680, H = 4320
+
+real	0m5.561s
+user	0m3.732s
+sys	0m1.810s
+CUDA
+Device: GeForce GTX 1070
+Filter scale = 9994988, filter size 101 x 101 and image size W = 7680, H = 4320
+
+real	0m5.878s
+user	0m3.864s
+sys	0m1.978s
+OpenCL
+Initialize without error!
+Filter scale = 9994988, filter size 101 x 101 and image size W = 7680, H = 4320
+
+real	0m5.567s
+user	0m3.810s
+sys	0m1.754s
+CUDA
+Device: GeForce GTX 1070
+Filter scale = 9994988, filter size 101 x 101 and image size W = 7680, H = 4320
+
+real	0m5.884s
+user	0m3.910s
+sys	0m1.937s
+OpenCL
+Initialize without error!
+Filter scale = 9994988, filter size 101 x 101 and image size W = 7680, H = 4320
+
+real	0m5.577s
+user	0m3.736s
+sys	0m1.836s
+CUDA
+Device: GeForce GTX 1070
+Filter scale = 9994988, filter size 101 x 101 and image size W = 7680, H = 4320
+
+real	0m5.876s
+user	0m3.970s
+sys	0m1.873s
+OpenCL
+Initialize without error!
+Filter scale = 9994988, filter size 101 x 101 and image size W = 7680, H = 4320
+
+real	0m5.570s
+user	0m3.829s
+sys	0m1.739s
+CUDA
+Device: GeForce GTX 1070
+Filter scale = 9994988, filter size 101 x 101 and image size W = 7680, H = 4320
+
+real	0m5.889s
+user	0m3.907s
+sys	0m1.949s
+OpenCL
+Initialize without error!
+Filter scale = 9994988, filter size 101 x 101 and image size W = 7680, H = 4320
+
+real	0m5.577s
+user	0m3.798s
+sys	0m1.777s
+CUDA
+Device: GeForce GTX 1070
+Filter scale = 9994988, filter size 101 x 101 and image size W = 7680, H = 4320
+
+real	0m5.919s
+user	0m3.850s
+sys	0m2.025s
+OpenCL
+Initialize without error!
+Filter scale = 9994988, filter size 101 x 101 and image size W = 7680, H = 4320
+
+real	0m5.586s
+user	0m3.811s
+sys	0m1.772s
+
