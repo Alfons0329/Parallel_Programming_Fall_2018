@@ -3,7 +3,7 @@ set -e
 
 if [ $# -eq 0 ]
 then
-    printf "Please provide filename for Gaussian Blur. usage . / run.sh <BMP image file1>\n"
+    printf "Please provide filename for Gaussian Blur. usage . / run.sh <BMP image file>\n"
 else
 
     read -p "1: Standard, 2: pthread, 3: OpenMP, 4: CUDA, 5: Generate Gaussian Matrix, 6: OpenCL, 7: Diff CUDA output vs serial (standard) output, 8: Run all platform at once, 9: Clean output files " choose
