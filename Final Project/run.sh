@@ -53,6 +53,27 @@ else
                 fi
             fi
 
+            read -p "Test stream pipeline CUDA Gaussian Blur 1 no 2 yes " yn
+            if [ $yn -eq 2 ];
+            then
+                make cuda_shm
+                read -p "Test thread in 4 16 64 256 1024 vs time? 1 no 2 yes " yn
+                if [ $yn -eq 1 ];
+                then
+                    make cuda_stream
+                    time ./gb_cuda_stream.o $1
+                else
+                    make cuda_stream
+                    for i in 4 16 64 256 1024;
+                    do
+                        printf "\nGaussian Blur without stream pipeline , only const memory: "
+                        time ./gb_cuda_shm.o $1 $i
+                        printf "\nGaussian Blur with stream pipeline and const memory "
+                        time ./gb_cuda_stream.o $1 $i
+                    done
+                fi
+            fi
+
             #./diff.o $1
 
             ;;

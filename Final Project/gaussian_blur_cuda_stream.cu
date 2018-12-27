@@ -43,7 +43,7 @@ __global__ void cuda_gaussian_filter(unsigned char* cuda_input_image, unsigned c
     unsigned int tmp = 0;
     int a, b;
 
-    if (cuda_width >= img_width || cuda_height >= img_height)
+    if (cuda_width * img_height + cuda_height >= img_border)
     {
         return;
     }
@@ -185,9 +185,9 @@ int main(int argc, char* argv[])
     // uint32* cuda_filter_G;
     int half_res = resolution / 2;
     cuda_err = cudaMalloc((void**) &cuda_input_image_s0, half_res * sizeof(unsigned char));
-    cuda_err2 = cudaMalloc((void**) &cuda_output_image_s0, half_res * sizeof(unsigned char));
+    cuda_err2 = cudaMalloc((void**) &cuda_output_image_s0, resolution * sizeof(unsigned char));
     cuda_err3 = cudaMalloc((void**) &cuda_input_image_s1, half_res * sizeof(unsigned char));
-    cuda_err4 = cudaMalloc((void**) &cuda_output_image_s1, half_res * sizeof(unsigned char));
+    cuda_err4 = cudaMalloc((void**) &cuda_output_image_s1, resolution * sizeof(unsigned char));
     // cuda_err3 = cudaMalloc((void**) &cuda_filter_G, FILTER_SIZE * sizeof(uint32)); //dont forget to allocate space for it
     if(cuda_err != cudaSuccess || cuda_err2 != cudaSuccess || cuda_err3 != cudaSuccess || cuda_err4 != cudaSuccess)
     {
@@ -211,35 +211,45 @@ int main(int argc, char* argv[])
     const dim3 grid_size(img_width / block_size.x + 1, img_height / block_size.y + 1, 1);
 
     // divide the pics into two for pipeline
-    for (int i = 0; i < resolution; i += half_res)
+    for (int shift_cnt = 2; shift_cnt >= 0; shift_cnt--)
     {
-        cuda_err = cudaMemcpyAsync(cuda_input_image_s0, input_image, half_res * sizeof(unsigned char), cudaMemcpyHostToDevice);
-        cuda_err2 = cudaMemcpyAsync(cuda_input_image_s1, input_image + i, half_res * sizeof(unsigned char), cudaMemcpyHostToDevice);
-        if(cuda_err != cudaSuccess || cuda_err2 != cudaSuccess)// || cuda_err3 != cudaSuccess || cuda_err4 != cudaSuccess)
+        for (int i = 0; i < resolution; i += half_res)
         {
-            printf("Failed with error part3 %s \n", cudaGetErrorString(cuda_err));
-            printf("Failed with error part3 err2: %s \n", cudaGetErrorString(cuda_err2));
-            printf("Failed with error part3 err3: %s \n", cudaGetErrorString(cuda_err3));
-            printf("Failed with error part3 err4: %s \n", cudaGetErrorString(cuda_err4));
-            return 6;
-        }
-        cuda_gaussian_filter<<<grid_size, block_size, 0, stm0>>>(cuda_input_image_s0, cuda_output_image_s0, img_width, img_height, i, (int)sqrt((int)FILTER_SIZE), FILTER_SCALE, resolution);
-        printf("i is now %d\n", i);
-        cuda_gaussian_filter<<<grid_size, block_size, 0, stm1>>>(cuda_input_image_s1, cuda_output_image_s1, img_width, img_height, i, (int)sqrt((int)FILTER_SIZE), FILTER_SCALE, resolution);
-        printf("ii is now %d\n", i);
-        cuda_err = cudaMemcpyAsync(output_image, cuda_output_image_s0, half_res * sizeof(unsigned char), cudaMemcpyDeviceToHost);
-        cuda_err2 = cudaMemcpyAsync(output_image + i, cuda_output_image_s1, half_res * sizeof(unsigned char), cudaMemcpyDeviceToHost);
-        printf("iii is now %d\n", i);
+            cuda_err = cudaMemcpyAsync(cuda_input_image_s0, input_image, half_res * sizeof(unsigned char), cudaMemcpyHostToDevice);
+            cuda_err2 = cudaMemcpyAsync(cuda_input_image_s1, input_image + i, half_res * sizeof(unsigned char), cudaMemcpyHostToDevice);
+            if(cuda_err != cudaSuccess || cuda_err2 != cudaSuccess)// || cuda_err3 != cudaSuccess || cuda_err4 != cudaSuccess)
+            {
+                printf("Failed with error part3 %s \n", cudaGetErrorString(cuda_err));
+                printf("Failed with error part3 err2: %s \n", cudaGetErrorString(cuda_err2));
+                printf("Failed with error part3 err3: %s \n", cudaGetErrorString(cuda_err3));
+                printf("Failed with error part3 err4: %s \n", cudaGetErrorString(cuda_err4));
+                return 6;
+            }
+            cuda_gaussian_filter<<<grid_size, block_size, 0, stm0>>>(cuda_input_image_s0, cuda_output_image_s0, img_width, img_height, shift_cnt, (int)sqrt((int)FILTER_SIZE), FILTER_SCALE, half_res);
+            cuda_gaussian_filter<<<grid_size, block_size, 0, stm1>>>(cuda_input_image_s1, cuda_output_image_s1, img_width, img_height, shift_cnt, (int)sqrt((int)FILTER_SIZE), FILTER_SCALE, resolution);
+            
+            cuda_err = cudaDeviceSynchronize();
 
-        if(cuda_err != cudaSuccess || cuda_err2 != cudaSuccess)// || cuda_err3 != cudaSuccess || cuda_err4 != cudaSuccess)
-        {
-            printf("Failed with error part4 %s \n", cudaGetErrorString(cuda_err));
-            printf("Failed with error part4 err2: %s \n", cudaGetErrorString(cuda_err2));
-            // printf("Failed with error part3 err3: %s \n", cudaGetErrorString(cuda_err3));
-            // printf("Failed with error part3 err4: %s \n", cudaGetErrorString(cuda_err4));
-            return 7;
+            if(cuda_err != cudaSuccess)
+            {
+                printf("Failed with threadsync error: %s \n", cudaGetErrorString(cuda_err));
+                return 127;
+            }
+
+            cuda_err = cudaMemcpyAsync(output_image, cuda_output_image_s0, half_res * sizeof(unsigned char), cudaMemcpyDeviceToHost);
+            cuda_err2 = cudaMemcpyAsync(output_image + i, cuda_output_image_s1, half_res * sizeof(unsigned char), cudaMemcpyDeviceToHost);
+            
+            if(cuda_err != cudaSuccess || cuda_err2 != cudaSuccess)// || cuda_err3 != cudaSuccess || cuda_err4 != cudaSuccess)
+            {
+                printf("Failed with error part4 %s \n", cudaGetErrorString(cuda_err));
+                printf("Failed with error part4 err2: %s \n", cudaGetErrorString(cuda_err2));
+                // printf("Failed with error part3 err3: %s \n", cudaGetErrorString(cuda_err3));
+                // printf("Failed with error part3 err4: %s \n", cudaGetErrorString(cuda_err4));
+                return 7;
+            }
         }
     }
+    
 
     cuda_err = cudaStreamSynchronize(stm0);
     cuda_err2 = cudaStreamSynchronize(stm1);
