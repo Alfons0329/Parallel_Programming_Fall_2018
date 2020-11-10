@@ -8,7 +8,6 @@
 #include <pthread.h>
 #include <string>
 
-// openCV libraries for showing the images dont change
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/core/core.hpp>
 #include <opencv2/opencv.hpp>
@@ -40,11 +39,8 @@ __global__ void cuda_gaussian_filter(unsigned char* cuda_input_image, unsigned c
     int cuda_row = blockIdx.y * blockDim.y + threadIdx.y;
 
     unsigned int tmp = 0;
+    int target = 0;
     int a, b;
-    if ((3 * (cuda_row * img_width + cuda_col) + shift >= img_border) || (cuda_col >= img_width || cuda_row >= img_height))
-    {
-        return;
-    }
 
     for(int j = 0; j < ws; j++)
     {
@@ -53,7 +49,12 @@ __global__ void cuda_gaussian_filter(unsigned char* cuda_input_image, unsigned c
             a = cuda_col + i - (ws / 2);
             b = cuda_row + j - (ws / 2);
 
-            tmp += const_filter_G[j * ws + i] * cuda_input_image[3 * (b * img_width + a) + shift]; 
+            target = 3 * (b * img_width + a) + shift;
+            if (target >= img_border || target < 0) // boundary checking
+            {
+                continue;
+            }
+			tmp += const_filter_G[j * ws + i] * cuda_input_image[target];  
         }
     }
     tmp /= FILTER_SCALE;

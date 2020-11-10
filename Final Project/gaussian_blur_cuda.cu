@@ -8,7 +8,6 @@
 #include <pthread.h>
 #include <string>
 
-// openCV libraries for showing the images dont change
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/core/core.hpp>
 #include <opencv2/opencv.hpp>
@@ -25,6 +24,7 @@ int FILTER_SIZE;
 unsigned int FILTER_SCALE;
 unsigned int *filter_G;
 
+// image IO
 unsigned char *input_image, *pic_blur, *output_image;
 
 // variables for cuda parallel processing
@@ -39,11 +39,6 @@ __global__ void cuda_gaussian_filter(unsigned char* cuda_input_image, unsigned c
     unsigned int tmp = 0;
     int target = 0;
     int a, b;
-    // if((3 * (cuda_row * img_width + cuda_col) + shift >= img_border)) //|| (cuda_col >= img_width || cuda_row >= img_height))
-    // {
-    //     return;
-    // }
-    
 
     for(int j = 0; j < ws; j++)
     {
@@ -52,9 +47,8 @@ __global__ void cuda_gaussian_filter(unsigned char* cuda_input_image, unsigned c
             a = cuda_col + i - (ws / 2);
             b = cuda_row + j - (ws / 2);
 
-            // tmp += cuda_filter_G[j * ws + i] * cuda_input_image[3 * (b * img_width + a) + shift];
             target = 3 * (b * img_width + a) + shift;
-            if (target >= img_border || target < 0)
+            if (target >= img_border || target < 0) // boundary checking
             {
                 continue;
             }
@@ -70,6 +64,7 @@ __global__ void cuda_gaussian_filter(unsigned char* cuda_input_image, unsigned c
     cuda_output_image[3 * (cuda_row * img_width + cuda_col) + shift] = tmp;
 
 }
+
 // show the progress of gaussian segment by segment
 // const float segment[] = { 0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f, 0.7f, 0.8f, 0.9f, 1.0f };
 void write_and_show(BmpReader* bmpReader, string outputblur_name, int k)
@@ -146,7 +141,6 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-
     // read input BMP file
     inputfile_name = argv[1];
     input_image = bmpReader -> ReadBMP(inputfile_name.c_str(), &img_width, &img_height);
@@ -207,7 +201,7 @@ int main(int argc, char* argv[])
 
     // copy memory from GPU to host
     cudaMemcpy(output_image, cuda_output_image, resolution * sizeof(unsigned char), cudaMemcpyDeviceToHost);
-    //---------------------CUDA main part-------------------------//
+    //---------------------CUDA main part end---------------------//
 
     // write output BMP file
     outputblur_name = inputfile_name.substr(0, inputfile_name.size() - 4)+ "_blur_cuda.bmp";
