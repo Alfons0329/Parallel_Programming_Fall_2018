@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+# set -e
 
 if [ $# -eq 0 ]
 then
@@ -94,7 +94,7 @@ else
             ./diff.o $1
             ;;
         8)
-            make all
+            make all -j8
             printf "\nSerial: "
             time taskset -c 1 ./gb_std_unpadded.o $1
             printf "\nOpenMP: "
@@ -103,8 +103,8 @@ else
             time ./gb_cuda.o $1
             printf "\nCUDA with constant memory: "
             time ./gb_cuda_shm.o $1
-            printf "\nOpenCL: "
-            time ./gb_opencl.o $1
+            # printf "\nOpenCL: "
+            # time ./gb_opencl.o $1
             ;;
         9)
             make clean
