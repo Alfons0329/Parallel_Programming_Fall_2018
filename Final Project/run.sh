@@ -56,7 +56,6 @@ else
             read -p "Test stream pipeline CUDA Gaussian Blur 1 no 2 yes " yn
             if [ $yn -eq 2 ];
             then
-                make cuda_shm
                 read -p "Test thread in 4 16 64 256 1024 vs time? 1 no 2 yes " yn
                 if [ $yn -eq 1 ];
                 then

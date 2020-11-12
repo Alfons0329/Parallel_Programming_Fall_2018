@@ -28,7 +28,6 @@ unsigned int *filter_G;
 unsigned char *input_image, *pic_blur, *output_image;
 
 // variables for cuda parallel processing
-int TILE_WIDTH;
 
 __global__ void cuda_gaussian_filter(unsigned char* cuda_input_image, unsigned char* cuda_output_image,int img_width, int img_height, int shift, unsigned int* cuda_filter_G, int ws, unsigned int FILTER_SCALE, int img_border)
 {
@@ -85,7 +84,7 @@ void write_and_show(BmpReader* bmpReader, string outputblur_name, int k)
 
 int main(int argc, char* argv[])
 {
-    TILE_WIDTH = 1024;
+    int THREAD_CNT = 1024;
 
     // read input filename
     string inputfile_name;
@@ -98,8 +97,8 @@ int main(int argc, char* argv[])
     }
     else if(argc == 3)
     {
-        sscanf(argv[2], "%d", &TILE_WIDTH);
-        printf("Testing with %d threads in each CUDA block\n", TILE_WIDTH);
+        sscanf(argv[2], "%d", &THREAD_CNT);
+        printf("Testing with %d threads in each CUDA block\n", THREAD_CNT);
     }
 
     // read Gaussian mask file from system
@@ -185,8 +184,8 @@ int main(int argc, char* argv[])
     }
 
     // grid and block, divide the image into 1024 per block
-    const dim3 block_size((int)sqrt(TILE_WIDTH), (int) sqrt(TILE_WIDTH), 1);
-    const dim3 grid_size(img_width / block_size.x + 1, img_height / block_size.y + 1, 1);
+    const dim3 block_size((int)sqrt(THREAD_CNT), (int) sqrt(THREAD_CNT));
+    const dim3 grid_size((img_height + THREAD_CNT - 1) / THREAD_CNT, (img_width + THREAD_CNT - 1) / THREAD_CNT);
     for(int i = 0; i < 3; i++) //R G B channel respectively
     {
         cuda_gaussian_filter<<<grid_size, block_size>>>(cuda_input_image, cuda_output_image, img_width, img_height, i, cuda_filter_G, (int)sqrt((int)FILTER_SIZE), FILTER_SCALE, resolution);
