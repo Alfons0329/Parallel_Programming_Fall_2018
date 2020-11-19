@@ -15,13 +15,10 @@
 using namespace std;
 using namespace cv;
 
-#define MYRED	2
-#define MYGREEN 1
-#define MYBLUE	0
-int img_width, img_height;
+int img_col, img_row;
 
-int FILTER_SIZE;
-unsigned int FILTER_SCALE;
+int filter_size;
+unsigned int filter_scale, filter_row;
 unsigned int *filter_G;
 
 // image IO
@@ -31,7 +28,7 @@ unsigned char *input_image, *pic_blur, *output_image;
 #define SHM_FILTER_WITDH 101
 __constant__ unsigned int const_filter_G[SHM_FILTER_WITDH * SHM_FILTER_WITDH]; // for constant memory in the GPU processing, used to cache and accelerate
 
-__global__ void cuda_gaussian_filter(unsigned char* cuda_input_image, unsigned char* cuda_output_image,int img_width, int img_height, int shift, int ws, unsigned int FILTER_SCALE, int img_border)
+__global__ void cuda_gaussian_filter(unsigned char* cuda_input_image, unsigned char* cuda_output_image,int img_col, int img_row, int shift, int filter_row, unsigned int filter_scale, int img_border)
 {
     // for CUDA parallelization
     int cuda_col = blockIdx.x * blockDim.x + threadIdx.x;
@@ -41,28 +38,28 @@ __global__ void cuda_gaussian_filter(unsigned char* cuda_input_image, unsigned c
     int target = 0;
     int a, b;
 
-    for(int j = 0; j < ws; j++)
+    for(int j = 0; j < filter_row; j++)
     {
-        for(int i = 0; i < ws; i++)
+        for(int i = 0; i < filter_row; i++)
         {
-            a = cuda_col + i - (ws / 2);
-            b = cuda_row + j - (ws / 2);
+            a = cuda_col + i - (filter_row / 2);
+            b = cuda_row + j - (filter_row / 2);
 
-            target = 3 * (b * img_width + a) + shift;
+            target = 3 * (b * img_col + a) + shift;
             if (target >= img_border || target < 0) // boundary checking
             {
                 continue;
             }
-			tmp += const_filter_G[j * ws + i] * cuda_input_image[target];  
+			tmp += const_filter_G[j * filter_row + i] * cuda_input_image[target];  
         }
     }
-    tmp /= FILTER_SCALE;
+    tmp /= filter_scale;
 
     if (tmp > 255)
     {
         tmp = 255;
     }
-    cuda_output_image[3 * (cuda_row * img_width + cuda_col) + shift] = tmp;
+    cuda_output_image[3 * (cuda_row * img_col + cuda_col) + shift] = tmp;
 
 }
 
@@ -70,7 +67,7 @@ __global__ void cuda_gaussian_filter(unsigned char* cuda_input_image, unsigned c
 // const float segment[] = { 0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f, 0.7f, 0.8f, 0.9f, 1.0f };
 void write_and_show(BmpReader* bmpReader, string outputblur_name, int k)
 {
-    bmpReader->WriteBMP(outputblur_name.c_str(), img_width, img_height, output_image);
+    bmpReader->WriteBMP(outputblur_name.c_str(), img_col, img_row, output_image);
 
     // show the output file
     Mat img = imread(outputblur_name);
@@ -106,18 +103,19 @@ int main(int argc, char* argv[])
     // read Gaussian mask file from system
     FILE* mask;
     mask = fopen("mask_Gaussian.txt", "r");
-    fscanf(mask, "%d", &FILTER_SIZE);
-    filter_G = new unsigned int [FILTER_SIZE];
+    fscanf(mask, "%d", &filter_size);
+    filter_row = filter_row;
+    filter_G = new unsigned int [filter_size];
 
-    for(int i = 0; i < FILTER_SIZE; i++)
+    for(int i = 0; i < filter_size; i++)
     {
         fscanf(mask, "%u", &filter_G[i]);
     }
 
-    FILTER_SCALE = 0; // recalculate
-    for(int i = 0; i < FILTER_SIZE; i++)
+    filter_scale = 0; // recalculate
+    for(int i = 0; i < filter_size; i++)
     {
-        FILTER_SCALE += filter_G[i];	
+        filter_scale += filter_G[i];	
     }
     fclose(mask);
 
@@ -144,11 +142,11 @@ int main(int argc, char* argv[])
 
     // read input BMP file
     inputfile_name = argv[1];
-    input_image = bmpReader -> ReadBMP(inputfile_name.c_str(), &img_width, &img_height);
-    printf("Filter scale = %u, filter size %d x %d and image size W = %d, H = %d\n", FILTER_SCALE, (int)sqrt(FILTER_SIZE), (int)sqrt(FILTER_SIZE), img_width, img_height);
+    input_image = bmpReader -> ReadBMP(inputfile_name.c_str(), &img_col, &img_row);
+    printf("Filter scale = %u, filter size %d x %d and image size W = %d, H = %d\n", filter_scale, filter_row, filter_row, img_col, img_row);
 
     // allocate space for output image
-    int resolution = 3 * (img_width * img_height); //padding
+    int resolution = 3 * (img_col * img_row); //padding
     output_image = (unsigned char*)malloc(resolution * sizeof(unsigned char));
     memset(output_image, 0, sizeof(output_image));
     // apply the Gaussian filter to the image, RGB respectively
@@ -163,7 +161,7 @@ int main(int argc, char* argv[])
     unsigned int* cuda_filter_G;
     cuda_err = cudaMalloc((void**) &cuda_input_image, resolution * sizeof(unsigned char));
     cuda_err2 = cudaMalloc((void**) &cuda_output_image, resolution * sizeof(unsigned char));
-    cuda_err3 = cudaMalloc((void**) &cuda_filter_G, FILTER_SIZE * sizeof(unsigned int)); //dont forget to allocate space for it
+    cuda_err3 = cudaMalloc((void**) &cuda_filter_G, filter_size * sizeof(unsigned int)); //dont forget to allocate space for it
     if(cuda_err != cudaSuccess || cuda_err2 != cudaSuccess || cuda_err3 != cudaSuccess)
     {
         printf("Failed with error part1 %s \n", cudaGetErrorString(cuda_err));
@@ -176,7 +174,7 @@ int main(int argc, char* argv[])
     // copy memory from host to GPU
     cuda_err = cudaMemcpy(cuda_input_image, input_image, resolution * sizeof(unsigned char), cudaMemcpyHostToDevice);
     cuda_err2 = cudaMemcpy(cuda_output_image, output_image, resolution * sizeof(unsigned char), cudaMemcpyHostToDevice);
-    cuda_err4 = cudaMemcpyToSymbol(const_filter_G, filter_G, FILTER_SIZE * sizeof(unsigned int)); // the filter matrix with constant memory
+    cuda_err4 = cudaMemcpyToSymbol(const_filter_G, filter_G, filter_size * sizeof(unsigned int)); // the filter matrix with constant memory
     if(cuda_err != cudaSuccess || cuda_err2 != cudaSuccess || cuda_err4 != cudaSuccess)
     {
         printf("Failed with error part2 err: %s \n", cudaGetErrorString(cuda_err));
@@ -192,11 +190,11 @@ int main(int argc, char* argv[])
     }
 
     // grid and block, divide the image into 1024 per block
-    const dim3 block_size((int)sqrt(THREAD_CNT), (int) sqrt(THREAD_CNT));
-    const dim3 grid_size((img_height + THREAD_CNT - 1) / THREAD_CNT, (img_width + THREAD_CNT - 1) / THREAD_CNT);
+    const dim3 block_size(32, 32);
+    const dim3 grid_size((img_col + 32 - 1) / 32, (img_row + 32 - 1) / 32);
     for(int i = 0; i < 3; i++) //R G B channel respectively
     {
-        cuda_gaussian_filter<<<grid_size, block_size>>>(cuda_input_image, cuda_output_image, img_width, img_height, i, (int)sqrt((int)FILTER_SIZE), FILTER_SCALE, resolution);
+        cuda_gaussian_filter<<<grid_size, block_size>>>(cuda_input_image, cuda_output_image, img_col, img_row, i, filter_row, filter_scale, resolution);
         cuda_err = cudaDeviceSynchronize();
 
         if(cuda_err != cudaSuccess)
@@ -212,7 +210,7 @@ int main(int argc, char* argv[])
 
     // write output BMP file
     outputblur_name = inputfile_name.substr(0, inputfile_name.size() - 4)+ "_blur_cuda_shm.bmp";
-    bmpReader->WriteBMP(outputblur_name.c_str(), img_width, img_height, output_image);
+    bmpReader->WriteBMP(outputblur_name.c_str(), img_col, img_row, output_image);
     
     // if demo, decomment this to show
     // write_and_show(bmpReader, outputblur_name, 0);

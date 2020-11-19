@@ -15,6 +15,7 @@ else
             ;;
         2)
             make pthread
+            time ./gb_pthread.o $1
             ;;
         3)
             make omp
@@ -33,7 +34,7 @@ else
                 done
             fi
 
-            read -p "Test constant memory CUDA Gaussian Blur? 1 no 2 yes " yn
+            read -p "Test constant, shared memory CUDA Gaussian Blur? 1 no 2 yes " yn
             if [ $yn -eq 2 ];
             then
                 read -p "Test thread in 4 16 64 256 1024 vs time? 1 no 2 yes " yn
@@ -45,36 +46,33 @@ else
                     make cuda_shm
                     for i in 4 16 64 256 1024;
                     do
-                        printf "\nGaussian Blur without constant memory: "
+                        printf "\nGaussian Blur without constant, shared memory: "
                         time ./gb_cuda.o $1 $i
-                        printf "\nGaussian Blur with constant memory "
+                        printf "\nGaussian Blur with constant, shared memory "
                         time ./gb_cuda_shm.o $1 $i
                     done
                 fi
             fi
 
-            read -p "Test stream pipeline CUDA Gaussian Blur 1 no 2 yes " yn
-            if [ $yn -eq 2 ];
-            then
-                read -p "Test thread in 4 16 64 256 1024 vs time? 1 no 2 yes " yn
-                if [ $yn -eq 1 ];
-                then
-                    make cuda_stream
-                    time ./gb_cuda_stream.o $1
-                else
-                    make cuda_stream
-                    for i in 4 16 64 256 1024;
-                    do
-                        printf "\nGaussian Blur without stream pipeline , only const memory: "
-                        time ./gb_cuda_shm.o $1 $i
-                        printf "\nGaussian Blur with stream pipeline and const memory "
-                        time ./gb_cuda_stream.o $1 $i
-                    done
-                fi
-            fi
-
-            #./diff.o $1
-
+            # read -p "Test stream pipeline CUDA Gaussian Blur 1 no 2 yes " yn
+            # if [ $yn -eq 2 ];
+            # then
+            #     read -p "Test thread in 4 16 64 256 1024 vs time? 1 no 2 yes " yn
+            #     if [ $yn -eq 1 ];
+            #     then
+            #         make cuda_stream
+            #         time ./gb_cuda_stream.o $1
+            #     else
+            #         make cuda_stream
+            #         for i in 4 16 64 256 1024;
+            #         do
+            #             printf "\nGaussian Blur without stream pipeline , only const memory: "
+            #             time ./gb_cuda_shm.o $1 $i
+            #             printf "\nGaussian Blur with stream pipeline and const memory "
+            #             time ./gb_cuda_stream.o $1 $i
+            #         done
+            #     fi
+            # fi
             ;;
         5)
             make matrix
@@ -87,10 +85,22 @@ else
             ;;
 
         7)
-            make diff
-            time taskset -c 1 ./gb_std_unpadded.o $1
-            time ./gb_cuda.o $1
-            ./diff.o $1
+            f_name="$(basename $1 .bmp)"
+            if [ -e $f_name\_blur\_unpadded.bmp ];
+            then
+                printf "\nFile for diff (Golden) already exists, directly diff! "
+            else
+                printf "\nFile for diff (Golden) does not exist, make first! "
+                make do_diff -j8
+                # time taskset -c 1 ./gb_std_unpadded.o $1
+            fi
+            
+            printf "\nCUDA without constant, shared memory: "
+            ./gb_cuda.o $1
+            ./diff.o $1 $f_name\_blur\_cuda.bmp
+            printf "\nCUDA with constant, shared memory: "
+            ./gb_cuda_shm.o $1 $f_name_blur_cuda_shm.bmp
+            ./diff.o $1 $f_name\_blur\_cuda.bmp
             ;;
         8)
             make all -j8
@@ -98,9 +108,9 @@ else
             time taskset -c 1 ./gb_std_unpadded.o $1
             printf "\nOpenMP: "
             time ./gb_omp.o $1
-            printf "\nCUDA without constant memory: "
+            printf "\nCUDA without constant, shared memory: "
             time ./gb_cuda.o $1
-            printf "\nCUDA with constant memory: "
+            printf "\nCUDA with constant, shared memory: "
             time ./gb_cuda_shm.o $1
             # printf "\nOpenCL: "
             # time ./gb_opencl.o $1

@@ -4,32 +4,24 @@ TARGET=gb_std.o
 SOURCE=gaussian_blur_standard.cpp
 
 #Pthread Gaussian Blur
-TARGET2=gb_pthread.o
-SOURCE2=gaussian_blur_pthread.cpp
+TARGET_PTHREAD=gb_pthread.o
+SOURCE_PTHREAD=gaussian_blur_pthread.cpp
 
 #OpenMP Gaussian Blur
-TARGET3=gb_omp.o
-SOURCE3=gaussian_blur_omp.cpp
+TARGET_OMP=gb_omp.o
+SOURCE_OMP=gaussian_blur_omp.cpp
 
 #CUDA Gaussian Blur
-TARGET4=gb_cuda.o
-SOURCE4=gaussian_blur_cuda.cu
+TARGET_CUDA=gb_cuda.o
+SOURCE_CUDA=gaussian_blur_cuda.cu
 
 #CUDA Gaussian Blur with constant memory implementation
-TARGET4_SHM=gb_cuda_shm.o
-SOURCE4_SHM=gaussian_blur_cuda_shm.cu
-
-#CUDA Gaussian Blur with constant memory and stream pipeline implementation
-TARGET4_STM=gb_cuda_stream.o
-SOURCE4_STM=gaussian_blur_cuda_stream.cu
-
-#CUDA Gaussian Blur with OpenCV
-TARGET5=gb_cuda_cv.o
-SOURCE5=gaussian_blur_cuda_cv.cu
+TARGET_CUDA_SHM=gb_cuda_shm.o
+SOURCE_CUDA_SHM=gaussian_blur_cuda_shm.cu
 
 #CUDA Gaussian Blur
-TARGET6=gb_opencl.o
-SOURCE6=gaussian_blur_opencl.cpp
+TARGET_OPENCL=gb_opencl.o
+SOURCE_OPENCL=gaussian_blur_opencl.cpp
 
 #Gaussian matrix generator and check matrix
 TARGET_CM=cm.o
@@ -58,43 +50,39 @@ OPENCV=`pkg-config --cflags --libs opencv`
 #---------------------------Rules-------------------------------#
 #Rules for standard Gaussian Blur (serial version)
 all: standard omp cuda cuda_shm
+do_diff: diff standard omp cuda cuda_shm 
 
-standard: gaussian_blur_unpadded.cpp
+standard: $(SOURCE_UNPADDED)
 	$(CPP) $(SOURCE_UNPADDED) -o $(TARGET_UNPADDED) $(CPP_FLAGS) $(OPENCV)
 
 #Rules for pthread Gaussian Blur
-pthread: gaussian_blur_pthread.cpp
-	$(CPP) $(SOURCE2) -o $(TARGET2) $(CPP_FLAGS) $(PTHREAD_LIBS) $(LIBS) $(OPENCV)
+pthread: $(SOURCE_PTHREAD)
+	$(CPP) $(SOURCE_PTHREAD) -o $(TARGET_PTHREAD) $(CPP_FLAGS) $(PTHREAD_LIBS) $(LIBS) $(OPENCV)
 
 #Rules for OpenMp Gaussian Blur
-omp: gaussian_blur_omp.cpp
-	$(CPP) $(SOURCE3) -o $(TARGET3) $(CPP_FLAGS) -fopenmp $(LIBS) $(OPENCV)
+omp: $(SOURCE_OMP)
+	$(CPP) $(SOURCE_OMP) -o $(TARGET_OMP) $(CPP_FLAGS) -fopenmp $(LIBS) $(OPENCV)
 
 #Rules for CUDA Gaussian Blur
-cuda: gaussian_blur_cuda.cu
-	$(NVCC) $(SOURCE4) -o $(TARGET4) $(CPP_FLAGS) $(LIBS) $(OPENCV)
+cuda: $(SOURCE_CUDA)
+	$(NVCC) $(SOURCE_CUDA) -o $(TARGET_CUDA) $(CPP_FLAGS) $(LIBS) $(OPENCV)
 
-#Rules for CUDA Gaussian Blur with shared memory implementation
-cuda_shm: gaussian_blur_cuda_shm.cu
-	$(NVCC) $(SOURCE4_SHM) -o $(TARGET4_SHM) $(CPP_FLAGS) $(LIBS) $(OPENCV)
-
-cuda_stream: gaussian_blur_cuda_stream.cu
-	$(NVCC) $(SOURCE4_STM) -o $(TARGET4_STM) $(CPP_FLAGS) $(LIBS) $(OPENCV)
+#Rules for CUDA Gaussian Blur
+cuda_shm: $(SOURCE_CUDA_SHM)
+	$(NVCC) $(SOURCE_CUDA_SHM) -o $(TARGET_CUDA_SHM) $(CPP_FLAGS) $(LIBS) $(OPENCV)
 
 #Rules for OpneCL Gaussian Blur
-opencl: gaussian_blur_opencl.cpp 
-	$(CPP) $(SOURCE6) -o $(TARGET6) $(CPP_FLAGS) $(OPENCV) $(OPENCL_LIBS) 
+opencl: $(SOURCE_OPENCL)
+	$(CPP) $(SOURCE_OPENCL) -o $(TARGET_OPENCL) $(CPP_FLAGS) $(OPENCV) $(OPENCL_LIBS) 
+
+#Rules for diff image
+diff: $(SOURCE_DIFF)
+	$(CPP) $(SOURCE_DIFF) -o $(TARGET_DIFF) $(CPP_FLAGS)
 
 #Rules for Gaussian matrix generator
 matrix: create_matrix.cpp
 	$(CPP) $(SOURCE_CM) -o $(TARGET_CM) $(CPP_FLAGS) 
 	$(CPP) $(SOURCE_CHECK) -o $(TARGET_CHECK) $(CPP_FLAGS) 
-
-diff: diff_image.cpp
-	$(CPP) $(SOURCE_DIFF) -o $(TARGET_DIFF) $(CPP_FLAGS) 
-	$(NVCC) $(SOURCE4) -o $(TARGET4) $(CPP_FLAGS) $(LIBS) $(OPENCV)
-	$(CPP) $(SOURCE_UNPADDED) -o $(TARGET_UNPADDED) $(CPP_FLAGS) $(OPENCV)
-
 
 .PHONY: clean
 
