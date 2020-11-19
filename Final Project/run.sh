@@ -97,10 +97,10 @@ else
             
             printf "\nCUDA without constant, shared memory: "
             ./gb_cuda.o $1
-            ./diff.o $1 $f_name\_blur\_cuda.bmp
+            ./diff.o $f_name\_blur\_unpadded.bmp $f_name\_blur\_cuda.bmp
             printf "\nCUDA with constant, shared memory: "
             ./gb_cuda_shm.o $1 $f_name_blur_cuda_shm.bmp
-            ./diff.o $1 $f_name\_blur\_cuda.bmp
+            ./diff.o $f_name\_blur\_unpadded.bmp $f_name\_blur\_cuda.bmp
             ;;
         8)
             make all -j8

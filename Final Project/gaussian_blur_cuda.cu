@@ -102,7 +102,7 @@ int main(int argc, char* argv[])
     FILE* mask;
     mask = fopen("mask_Gaussian.txt", "r");
     fscanf(mask, "%d", &filter_size);
-    filter_row = filter_row;
+    filter_row = sqrt(filter_size);
     filter_G = new unsigned int [filter_size];
 
     for(int i = 0; i < filter_size; i++)
@@ -172,7 +172,7 @@ int main(int argc, char* argv[])
     // copy memory from host to GPU
     cuda_err = cudaMemcpy(cuda_input_image, input_image, resolution * sizeof(unsigned char), cudaMemcpyHostToDevice);
     cuda_err2 = cudaMemcpy(cuda_output_image, output_image, resolution * sizeof(unsigned char), cudaMemcpyHostToDevice);
-    cuda_err3 = cudaMemcpy(cuda_filter_G, filter_G, filter_size* sizeof(unsigned int), cudaMemcpyHostToDevice);
+    cuda_err3 = cudaMemcpy(cuda_filter_G, filter_G, filter_size * sizeof(unsigned int), cudaMemcpyHostToDevice);
     if(cuda_err != cudaSuccess || cuda_err2 != cudaSuccess || cuda_err3 != cudaSuccess)
     {
         printf("Failed with error part2 err: %s \n", cudaGetErrorString(cuda_err));

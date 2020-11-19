@@ -104,7 +104,7 @@ int main(int argc, char* argv[])
     FILE* mask;
     mask = fopen("mask_Gaussian.txt", "r");
     fscanf(mask, "%d", &filter_size);
-    filter_row = filter_row;
+    filter_row = sqrt(filter_size);
     filter_G = new unsigned int [filter_size];
 
     for(int i = 0; i < filter_size; i++)
