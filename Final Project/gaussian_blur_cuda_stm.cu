@@ -30,7 +30,7 @@ void cuda_err_chk(const cudaError_t& e, const int& cudaError_cnt){
 
 
 // Kernel
-__global__ void cuda_gaussian_filter(unsigned char* img_input_cuda, unsigned char* img_output_cuda,int img_col, int img_row, int shift, unsigned int* filter_cuda, int filter_row, unsigned int filter_scale, int img_border){
+__global__ void cuda_gaussian_filter(unsigned char* img_input_cuda, unsigned char* img_output_cuda,int img_col, int img_row, int shift, unsigned int* filter_cuda, int filter_row, unsigned int filter_scale, int img_border_lower, int img_border_upper){
     int cuda_col = blockIdx.x * blockDim.x + threadIdx.x;
     int cuda_row = blockIdx.y * blockDim.y + threadIdx.y;
 
@@ -44,7 +44,7 @@ __global__ void cuda_gaussian_filter(unsigned char* img_input_cuda, unsigned cha
             b = cuda_row + j - (filter_row / 2);
 
             target = 3 * (b * img_col + a) + shift;
-            if (target >= img_border || target < 0){
+            if (target >= img_border_upper || target < img_border_lower){
                 continue;
             }
 			tmp += filter_cuda[j * filter_row + i] * img_input_cuda[target];  
@@ -124,8 +124,11 @@ int main(int argc, char* argv[])
 
     // Init CUDA streams
     cudaStream_t streams[N_STREAMS];
+    for (int i = 0; i < N_STREAMS; i++) {
+        cudaStreamCreate(&streams[i]);
+    }
     int offset_img_input = 0, offset_img_output = 0;
-    int chunk_size_img_input = resolution / N_STREAMS, chunk_size_img_output = resolution / N_STREAMS;
+    int chunk_size = resolution / N_STREAMS;
 
     unsigned char* img_input_cuda;
     unsigned char* img_output_cuda;
@@ -135,34 +138,44 @@ int main(int argc, char* argv[])
     cuda_err_chk(cudaMalloc((void**) &filter_cuda, filter_size * sizeof(unsigned int)), cudaError_cnt++);
     
     // Copy memory from host to GPU
-    cuda_err_chk(cudaMemcpy(img_input_cuda, img_input, resolution * sizeof(unsigned char), cudaMemcpyHostToDevice), cudaError_cnt++);
-    cuda_err_chk(cudaMemcpy(img_output_cuda, img_output, resolution * sizeof(unsigned char), cudaMemcpyHostToDevice), cudaError_cnt++);
     cuda_err_chk(cudaMemcpy(filter_cuda, filter, filter_size * sizeof(unsigned int), cudaMemcpyHostToDevice), cudaError_cnt++); // The filter matrix with constant memory
     
     // Grid and block, divide the image into 1024 per block
+    /* 
+    Split into 8 parts
+    [
+        _
+        _
+        _
+        _
+        _
+        _
+        _
+        _
+        ]
+        
+    */
     const dim3 block_size(block_row, block_row);
-    const dim3 grid_size((img_col + block_row - 1) / block_row, (img_row + block_row - 1) / block_row);
+    const dim3 grid_size((img_col + block_row - 1) / block_row, (img_row + block_row - 1) / block_row / N_STREAMS);
     
     /*-------------- CUDA run ------------*/
-    // [01|23|45|6]
     // R G B channel respectively
     struct timeval start, end; 
     gettimeofday(&start, 0);
     for(int j = 0; j < N_STREAMS; j++){
-        offset_img_input = chunk_size_img_input * j;
-        offset_img_output = chunk_size_img_output * j;
+        offset_img_input = chunk_size * j;
+        offset_img_output = chunk_size * j;
         
-        if(j == N_STREAMS - 1){
-            chunk_size_img_input = resolution - offset_img_input;
-            chunk_size_img_output = resolution - offset_img_output;
-        }
+        cuda_err_chk(cudaMemcpyAsync(img_input_cuda + offset_img_input, img_input + offset_img_input, chunk_size * sizeof(unsigned char), cudaMemcpyHostToDevice, streams[j]), cudaError_cnt++);
+        cuda_err_chk(cudaMemcpyAsync(img_output_cuda + offset_img_output, img_input + offset_img_output, chunk_size * sizeof(unsigned char), cudaMemcpyHostToDevice, streams[j]), cudaError_cnt++);
 
-        cuda_err_chk(cudaMemcpyAsync(img_input_cuda + offset_img_input, img_input + offset_img_input, chunk_size_img_input * sizeof(unsigned char), cudaMemcpyHostToDevice, streams[j]), cudaError_cnt++);
         for(int i = 0; i < 3; i++) {
-            cuda_gaussian_filter<<<grid_size, block_size>>>(img_input_cuda, img_output_cuda, img_col, img_row, i, filter_cuda, filter_row, filter_scale, resolution);
-            cuda_err_chk(cudaDeviceSynchronize(), cudaError_cnt++);
+            cuda_gaussian_filter<<<grid_size, block_size, 0, streams[j]>>>(img_input_cuda + offset_img_input, img_output_cuda + offset_img_output, img_col, img_row, i, filter_cuda, filter_row, filter_scale, chunk_size * j, chunk_size * (j + 1));
         }
+        
+        cuda_err_chk(cudaMemcpyAsync(img_output + offset_img_output, img_output_cuda + offset_img_output, chunk_size * sizeof(unsigned char), cudaMemcpyDeviceToHost), cudaError_cnt++);
     }
+    cuda_err_chk(cudaDeviceSynchronize(), cudaError_cnt++);
     gettimeofday(&end, 0);
     int sec = end.tv_sec - start.tv_sec;
     int usec = end.tv_usec - start.tv_usec;
@@ -171,10 +184,9 @@ int main(int argc, char* argv[])
     
     /*-------------- Finalize ------------*/
     // Copy memory from GPU to host
-    cuda_err_chk(cudaMemcpy(img_output, img_output_cuda, resolution * sizeof(unsigned char), cudaMemcpyDeviceToHost), cudaError_cnt++);
 
     // Write output BMP file
-    fname_output = fname_input.substr(0, fname_input.size() - 4)+ "_blur_cuda.bmp";
+    fname_output = fname_input.substr(0, fname_input.size() - 4)+ "_blur_cuda_stm.bmp";
     bmp_io->WriteBMP(fname_output.c_str(), img_col, img_row, img_output);
     
     // Free memory space

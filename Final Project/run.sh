@@ -13,16 +13,19 @@ else
             make standard
             time taskset -c 1 ./gb_std_unpadded.o $1
             ;;
+
         2)
             make pthread
             time ./gb_pthread.o $1
             ;;
+
         3)
             make omp
             time ./gb_omp.o $1
             ;;
+
         4)
-            make cuda
+            make cuda cuda_shm cuda_stm -j8
             read -p "Test thread in 4 16 64 256 1024 vs time? 1 no 2 yes " yn
             if [ $yn -eq 1 ];
             then
@@ -40,13 +43,11 @@ else
                 read -p "Test thread in 4 16 64 256 1024 vs time? 1 no 2 yes " yn
                 if [ $yn -eq 1 ];
                 then
-                    make cuda_shm
                     time ./gb_cuda_shm.o $1
                 else
-                    make cuda_shm
                     for i in 4 16 64 256 1024;
                     do
-                        printf "\nGaussian Blur without constant, shared memory: "
+                        printf "\nGaussian Blur without constant, shared memory "
                         time ./gb_cuda.o $1 $i
                         printf "\nGaussian Blur with constant, shared memory "
                         time ./gb_cuda_shm.o $1 $i
@@ -54,31 +55,31 @@ else
                 fi
             fi
 
-            # read -p "Test stream pipeline CUDA Gaussian Blur 1 no 2 yes " yn
-            # if [ $yn -eq 2 ];
-            # then
-            #     read -p "Test thread in 4 16 64 256 1024 vs time? 1 no 2 yes " yn
-            #     if [ $yn -eq 1 ];
-            #     then
-            #         make cuda_stream
-            #         time ./gb_cuda_stream.o $1
-            #     else
-            #         make cuda_stream
-            #         for i in 4 16 64 256 1024;
-            #         do
-            #             printf "\nGaussian Blur without stream pipeline , only const memory: "
-            #             time ./gb_cuda_shm.o $1 $i
-            #             printf "\nGaussian Blur with stream pipeline and const memory "
-            #             time ./gb_cuda_stream.o $1 $i
-            #         done
-            #     fi
-            # fi
+            read -p "Test stream pipeline CUDA Gaussian Blur 1 no 2 yes " yn
+            if [ $yn -eq 2 ];
+            then
+                read -p "Test thread in 4 16 64 256 1024 vs time? 1 no 2 yes " yn
+                if [ $yn -eq 1 ];
+                then
+                    time ./gb_cuda_stm.o $1
+                else
+                    for i in 4 16 64 256 1024;
+                    do
+                        printf "\nGaussian Blur without stream pipline "
+                        time ./gb_cuda.o $1 $i
+                        printf "\nGaussian Blur with stream pipline "
+                        time ./gb_cuda_stm.o $1 $i
+                    done
+                fi
+            fi
             ;;
+
         5)
             make matrix
             ./cm.o
             ./check.o
             ;;
+
         6)
             make opencl
             time ./gb_opencl.o $1
@@ -102,6 +103,7 @@ else
             ./gb_cuda_shm.o $1 $f_name_blur_cuda_shm.bmp
             ./diff.o $f_name\_blur\_unpadded.bmp $f_name\_blur\_cuda.bmp
             ;;
+
         8)
             make all -j8
             printf "\nSerial: "
@@ -115,12 +117,15 @@ else
             # printf "\nOpenCL: "
             # time ./gb_opencl.o $1
             ;;
+
         9)
             make clean
             ;;
+
         *)
             exit
             ;;
+            
     esac
 
 fi
