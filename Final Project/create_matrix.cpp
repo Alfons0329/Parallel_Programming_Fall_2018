@@ -45,14 +45,13 @@ int main()
         printf("Error reading file");
     }
 
-    printf("Input matrix size: ");
+    printf("Input N for N * N Gaissuan square matrix: ");
     scanf("%d", &matrix_size);
-    if(matrix_size % 2 == 0)
+    if((matrix_size * matrix_size) % 2 == 0)
     {
         printf("Matrix size MUST be an odd number ! \n");
         return 1;
     }
-    printf("Input stddev: ");
     printf("matrix = %d , stddev = %lf \n", matrix_size, sigma);
 
     vector<vector<float> > GKernel(matrix_size, vector<float>(matrix_size, 0.0f));

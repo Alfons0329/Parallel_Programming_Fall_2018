@@ -2,35 +2,35 @@
 #include "bmpReader.cpp"
 #include <cuda.h>
 #include <cuda_runtime.h>
-#include <stdio.h>
-#include <iostream>
-#include <math.h>
 #include <pthread.h>
-#include <string>
-
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/core/core.hpp>
-#include <opencv2/opencv.hpp>
+#include <bits/stdc++.h>
+#include <sys/time.h>
 
 using namespace std;
-using namespace cv;
 
-int img_col, img_row;
-
+// Gaussian filter
 int filter_size;
 unsigned int filter_scale, filter_row;
-unsigned int *filter_G;
+unsigned int *filter;
 
-// image IO
-unsigned char *input_image, *pic_blur, *output_image;
+// Image IO
+int img_col, img_row;
+unsigned char *img_input, *img_output;
 
-// variables for cuda parallel processing
-#define SHM_FILTER_WITDH 101
-__constant__ unsigned int const_filter_G[SHM_FILTER_WITDH * SHM_FILTER_WITDH]; // for constant memory in the GPU processing, used to cache and accelerate
+// CUDA error checker
+void cuda_err_chk(const cudaError_t& e, const int& cudaError_cnt){
+    if(e != cudaSuccess){
+        fprintf(stderr, "cudaError in no. %d: %s\n", cudaError_cnt, cudaGetErrorString(e));
+        exit(EXIT_FAILURE);
+    }
+}
 
-__global__ void cuda_gaussian_filter(unsigned char* cuda_input_image, unsigned char* cuda_output_image,int img_col, int img_row, int shift, int filter_row, unsigned int filter_scale, int img_border)
-{
-    // for CUDA parallelization
+// Constant, cached, and shared memory in CUDA
+#define FILTER_ROW_MAX 101
+__constant__ unsigned int const_filter[FILTER_ROW_MAX * FILTER_ROW_MAX]; 
+
+// Kernel
+__global__ void cuda_gaussian_filter(unsigned char* img_input_cuda, unsigned char* img_output_cuda,int img_col, int img_row, int shift, int filter_row, unsigned int filter_scale, int img_border){
     int cuda_col = blockIdx.x * blockDim.x + threadIdx.x;
     int cuda_row = blockIdx.y * blockDim.y + threadIdx.y;
 
@@ -38,188 +38,131 @@ __global__ void cuda_gaussian_filter(unsigned char* cuda_input_image, unsigned c
     int target = 0;
     int a, b;
 
-    for(int j = 0; j < filter_row; j++)
-    {
-        for(int i = 0; i < filter_row; i++)
-        {
+    for(int j = 0; j < filter_row; j++){
+        for(int i = 0; i < filter_row; i++){
             a = cuda_col + i - (filter_row / 2);
             b = cuda_row + j - (filter_row / 2);
 
             target = 3 * (b * img_col + a) + shift;
-            if (target >= img_border || target < 0) // boundary checking
-            {
+            if (target >= img_border || target < 0){
                 continue;
             }
-			tmp += const_filter_G[j * filter_row + i] * cuda_input_image[target];  
+			tmp += const_filter[j * filter_row + i] * img_input_cuda[target];  
         }
     }
     tmp /= filter_scale;
 
-    if (tmp > 255)
-    {
+    if(tmp > 255){
         tmp = 255;
     }
-    cuda_output_image[3 * (cuda_row * img_col + cuda_col) + shift] = tmp;
-
-}
-
-// show the progress of gaussian segment by segment
-// const float segment[] = { 0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f, 0.7f, 0.8f, 0.9f, 1.0f };
-void write_and_show(BmpReader* bmpReader, string outputblur_name, int k)
-{
-    bmpReader->WriteBMP(outputblur_name.c_str(), img_col, img_row, output_image);
-
-    // show the output file
-    Mat img = imread(outputblur_name);
-    while(1)
-    {
-        imshow("Current progress", img);
-        if(waitKey(0) % 256 == 27)
-        {
-            break;
-        }
-    }
+    img_output_cuda[3 * (cuda_row * img_col + cuda_col) + shift] = tmp;
 }
 
 int main(int argc, char* argv[])
 {
-    int THREAD_CNT = 1024;
+    /*--------------- Init -------------------*/
+    int thread_cnt, block_row;
+    int cudaError_cnt = 0;
+    string fname_input;
+    string fname_output;
 
-    // read input filename
-    string inputfile_name;
-    string outputblur_name;
-
-    if(argc < 2)
-    {
-        printf("Please provide filename for Gaussian Blur. usage ./gb_std.o <BMP image file>");
-        return 1;
+    if(argc < 2){
+        fprintf(stderr, "%s", "Please provide filename for Gaussian Blur. usage ./gb_std.o <BMP image file> \n");
+        return -1;
     }
-    else if(argc == 3)
-    {
-        sscanf(argv[2], "%d", &THREAD_CNT);
-        printf("Testing with %d threads in each CUDA block\n", THREAD_CNT);
+    else if(argc == 3){
+        sscanf(argv[2], "%d", &thread_cnt);
+        printf("Testing with %d threads in each CUDA block\n", thread_cnt);
     }
+    else{
+        // Set default thread count to 1024
+        thread_cnt = 1024;
+    }
+    block_row = (int)sqrt(thread_cnt);
 
-    // read Gaussian mask file from system
+    /*---------------- Image and mask IO ----*/
     FILE* mask;
     mask = fopen("mask_Gaussian.txt", "r");
     fscanf(mask, "%d", &filter_size);
-    filter_row = sqrt(filter_size);
-    filter_G = new unsigned int [filter_size];
+    filter_row = (int)sqrt(filter_size);
+    filter = new unsigned int [filter_size];
 
-    for(int i = 0; i < filter_size; i++)
-    {
-        fscanf(mask, "%u", &filter_G[i]);
+    for(int i = 0; i < filter_size; i++){
+        fscanf(mask, "%u", &filter[i]);
     }
 
-    filter_scale = 0; // recalculate
-    for(int i = 0; i < filter_size; i++)
-    {
-        filter_scale += filter_G[i];	
+    filter_scale = 0;
+    for(int i = 0; i < filter_size; i++){
+        filter_scale += filter[i];	
     }
     fclose(mask);
 
-    // main part of Gaussian blur
-    BmpReader* bmpReader = new BmpReader();
-
-    // platform information
+    
+    /*-------------- CUDA init ------------*/
     int num = 0;
     cudaGetDeviceCount(&num);
-
-    // get gpu properties
     cudaDeviceProp prop;
-    if(num > 0)
-    {
+    if(num > 0){
         cudaGetDeviceProperties(&prop, 0);
-        // get device name
-        cout << "Device: " <<prop.name << endl;
+        cout << "Device: " << prop.name << '\n';
     }
-    else
-    {
-        printf("No NVIDIA GPU detected! \n");
+    else{
+        fprintf(stderr, "%s", "No NVIDIA GPU detected!\n");
         return 1;
     }
-
-    // read input BMP file
-    inputfile_name = argv[1];
-    input_image = bmpReader -> ReadBMP(inputfile_name.c_str(), &img_col, &img_row);
+    
+    fname_input = argv[1];
+    BmpReader* bmp_io = new BmpReader();
+    img_input = bmp_io->ReadBMP(fname_input.c_str(), &img_col, &img_row);
     printf("Filter scale = %u, filter size %d x %d and image size W = %d, H = %d\n", filter_scale, filter_row, filter_row, img_col, img_row);
 
-    // allocate space for output image
-    int resolution = 3 * (img_col * img_row); //padding
-    output_image = (unsigned char*)malloc(resolution * sizeof(unsigned char));
-    memset(output_image, 0, sizeof(output_image));
-    // apply the Gaussian filter to the image, RGB respectively
-    string tmp(inputfile_name);
+    int resolution = 3 * (img_col * img_row);
+    img_output = (unsigned char*)malloc(resolution * sizeof(unsigned char));
+    memset(img_output, 0, sizeof(img_output));
+    // Apply the Gaussian filter to the image, RGB respectively
+    string tmp(fname_input);
 
-    //---------------------CUDA main part-------------------------//
-    // allocate space
-    cudaError_t cuda_err, cuda_err2, cuda_err3, cuda_err4;
-
-    unsigned char* cuda_input_image;
-    unsigned char* cuda_output_image;
-    unsigned int* cuda_filter_G;
-    cuda_err = cudaMalloc((void**) &cuda_input_image, resolution * sizeof(unsigned char));
-    cuda_err2 = cudaMalloc((void**) &cuda_output_image, resolution * sizeof(unsigned char));
-    cuda_err3 = cudaMalloc((void**) &cuda_filter_G, filter_size * sizeof(unsigned int)); //dont forget to allocate space for it
-    if(cuda_err != cudaSuccess || cuda_err2 != cudaSuccess || cuda_err3 != cudaSuccess)
-    {
-        printf("Failed with error part1 %s \n", cudaGetErrorString(cuda_err));
-        printf("Failed with error part1 err2: %s \n", cudaGetErrorString(cuda_err2));
-        printf("Failed with error part1 err3: %s \n", cudaGetErrorString(cuda_err3));
-        return 1;
-
-    }
-
-    // copy memory from host to GPU
-    cuda_err = cudaMemcpy(cuda_input_image, input_image, resolution * sizeof(unsigned char), cudaMemcpyHostToDevice);
-    cuda_err2 = cudaMemcpy(cuda_output_image, output_image, resolution * sizeof(unsigned char), cudaMemcpyHostToDevice);
-    cuda_err4 = cudaMemcpyToSymbol(const_filter_G, filter_G, filter_size * sizeof(unsigned int)); // the filter matrix with constant memory
-    if(cuda_err != cudaSuccess || cuda_err2 != cudaSuccess || cuda_err4 != cudaSuccess)
-    {
-        printf("Failed with error part2 err: %s \n", cudaGetErrorString(cuda_err));
-        printf("Failed with error part2 err2: %s \n", cudaGetErrorString(cuda_err2));
-        printf("Failed with error part2 err3: %s \n", cudaGetErrorString(cuda_err3));
-        return 2;
-    }
-
-    if(cuda_err4 != cudaSuccess)
-    {
-        printf("Constant memory allocation failed! %s \n", cudaGetErrorString(cuda_err4));
-        return 4;
-    }
-
-    // grid and block, divide the image into 1024 per block
-    const dim3 block_size(32, 32);
-    const dim3 grid_size((img_col + 32 - 1) / 32, (img_row + 32 - 1) / 32);
-    for(int i = 0; i < 3; i++) //R G B channel respectively
-    {
-        cuda_gaussian_filter<<<grid_size, block_size>>>(cuda_input_image, cuda_output_image, img_col, img_row, i, filter_row, filter_scale, resolution);
-        cuda_err = cudaDeviceSynchronize();
-
-        if(cuda_err != cudaSuccess)
-        {
-            printf("Failed with error part3 %s \n", cudaGetErrorString(cuda_err));
-            return 3;
-        }
-    }
-
-    // copy memory from GPU to host
-    cudaMemcpy(output_image, cuda_output_image, resolution * sizeof(unsigned char), cudaMemcpyDeviceToHost);
-    //---------------------CUDA main part end---------------------//
-
-    // write output BMP file
-    outputblur_name = inputfile_name.substr(0, inputfile_name.size() - 4)+ "_blur_cuda_shm.bmp";
-    bmpReader->WriteBMP(outputblur_name.c_str(), img_col, img_row, output_image);
+    unsigned char* img_input_cuda;
+    unsigned char* img_output_cuda;
+    cuda_err_chk(cudaMalloc((void**) &img_input_cuda, resolution * sizeof(unsigned char)), cudaError_cnt++);
+    cuda_err_chk(cudaMalloc((void**) &img_output_cuda, resolution * sizeof(unsigned char)), cudaError_cnt++);
     
-    // if demo, decomment this to show
-    // write_and_show(bmpReader, outputblur_name, 0);
-    // free memory space
-    free(input_image);
-    free(output_image);
-    cudaFree(cuda_input_image);
-    cudaFree(cuda_output_image);
-    cudaFree(const_filter_G);
+    // Copy memory from host to GPU
+    cuda_err_chk(cudaMemcpy(img_input_cuda, img_input, resolution * sizeof(unsigned char), cudaMemcpyHostToDevice), cudaError_cnt++);
+    cuda_err_chk(cudaMemcpy(img_output_cuda, img_output, resolution * sizeof(unsigned char), cudaMemcpyHostToDevice), cudaError_cnt++);
+    cuda_err_chk(cudaMemcpyToSymbol(const_filter, filter, filter_size * sizeof(unsigned int)), cudaError_cnt++); // The filter matrix with constant memory
+    
+    // Grid and block, divide the image into 1024 per block
+    const dim3 block_size(block_row, block_row);
+    const dim3 grid_size((img_col + block_row - 1) / block_row, (img_row + block_row - 1) / block_row);
+    
+    /*-------------- CUDA run ------------*/
+    // R G B channel respectively
+    struct timeval start, end; 
+    gettimeofday(&start, 0);
+    for(int i = 0; i < 3; i++) {
+        cuda_gaussian_filter<<<grid_size, block_size>>>(img_input_cuda, img_output_cuda, img_col, img_row, i, filter_row, filter_scale, resolution);
+        cuda_err_chk(cudaDeviceSynchronize(), cudaError_cnt++);
+    }
+    gettimeofday(&end, 0);
+    int sec = end.tv_sec - start.tv_sec;
+    int usec = end.tv_usec - start.tv_usec;
+    int t_gpu = sec * 1000 + (usec / 1000);
+    printf("GPU time (ms): %d\n", t_gpu);
+    
+    /*-------------- Finalize ------------*/
+    // Copy memory from GPU to host
+    cuda_err_chk(cudaMemcpy(img_output, img_output_cuda, resolution * sizeof(unsigned char), cudaMemcpyDeviceToHost), cudaError_cnt++);
+
+    // Write output BMP file
+    fname_output = fname_input.substr(0, fname_input.size() - 4)+ "_blur_cuda_shm.bmp";
+    bmp_io->WriteBMP(fname_output.c_str(), img_col, img_row, img_output);
+    
+    // Free memory space
+    free(img_input);
+    free(img_output);
+    cuda_err_chk(cudaFree(img_input_cuda), cudaError_cnt++);
+    cuda_err_chk(cudaFree(img_output_cuda), cudaError_cnt++);
 
     return 0;
 }
