@@ -142,8 +142,8 @@ int main(int argc, char* argv[])
     gettimeofday(&start, 0);
     for(int i = 0; i < 3; i++) {
         cuda_gaussian_filter<<<grid_size, block_size>>>(img_input_cuda, img_output_cuda, img_col, img_row, i, filter_row, filter_scale, resolution);
-        cuda_err_chk(cudaDeviceSynchronize(), cudaError_cnt++);
     }
+    cuda_err_chk(cudaDeviceSynchronize(), cudaError_cnt++);
     gettimeofday(&end, 0);
     int sec = end.tv_sec - start.tv_sec;
     int usec = end.tv_usec - start.tv_usec;

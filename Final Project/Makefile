@@ -15,9 +15,13 @@ SOURCE_OMP=gaussian_blur_omp.cpp
 TARGET_CUDA=gb_cuda.o
 SOURCE_CUDA=gaussian_blur_cuda.cu
 
-#CUDA Gaussian Blur with constant memory implementation
+#CUDA Gaussian Blur with constant, shared memory implementation
 TARGET_CUDA_SHM=gb_cuda_shm.o
 SOURCE_CUDA_SHM=gaussian_blur_cuda_shm.cu
+
+#CUDA Gaussian Blur with CUDA stream implementation
+TARGET_CUDA_STM=gb_cuda_stm.o
+SOURCE_CUDA_STM=gaussian_blur_cuda_stm.cu
 
 #CUDA Gaussian Blur
 TARGET_OPENCL=gb_opencl.o
@@ -49,8 +53,8 @@ OPENCV=`pkg-config --cflags --libs opencv`
 
 #---------------------------Rules-------------------------------#
 #Rules for standard Gaussian Blur (serial version)
-all: standard omp cuda cuda_shm
-do_diff: diff standard omp cuda cuda_shm 
+all: standard pthread omp cuda cuda_shm cuda_stm
+do_diff: diff standard omp cuda cuda_shm cuda_stm
 
 standard: $(SOURCE_UNPADDED)
 	$(CPP) $(SOURCE_UNPADDED) -o $(TARGET_UNPADDED) $(CPP_FLAGS) $(OPENCV)
@@ -67,9 +71,13 @@ omp: $(SOURCE_OMP)
 cuda: $(SOURCE_CUDA)
 	$(NVCC) $(SOURCE_CUDA) -o $(TARGET_CUDA) $(CPP_FLAGS) $(LIBS) $(OPENCV)
 
-#Rules for CUDA Gaussian Blur
+#Rules for CUDA Gaussian Blur with constant, shared memory implementation
 cuda_shm: $(SOURCE_CUDA_SHM)
 	$(NVCC) $(SOURCE_CUDA_SHM) -o $(TARGET_CUDA_SHM) $(CPP_FLAGS) $(LIBS) $(OPENCV)
+
+#Rules for CUDA Gaussian Blur with CUDA stream implementation
+cuda_stm: $(SOURCE_CUDA_STM)
+	$(NVCC) $(SOURCE_CUDA_STM) -o $(TARGET_CUDA_STM) $(CPP_FLAGS) $(LIBS) $(OPENCV)
 
 #Rules for OpneCL Gaussian Blur
 opencl: $(SOURCE_OPENCL)
