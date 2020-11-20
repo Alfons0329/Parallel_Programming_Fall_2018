@@ -6,6 +6,14 @@
 #include <bits/stdc++.h>
 #include <sys/time.h>
 
+#define ANSI_COLOR_RED     "\x1b[31m"
+#define ANSI_COLOR_GREEN   "\x1b[32m"
+#define ANSI_COLOR_YELLOW  "\x1b[33m"
+#define ANSI_COLOR_BLUE    "\x1b[34m"
+#define ANSI_COLOR_MAGENTA "\x1b[35m"
+#define ANSI_COLOR_CYAN    "\x1b[36m"
+#define ANSI_COLOR_RESET   "\x1b[0m"
+
 using namespace std;
 
 // Gaussian filter
@@ -147,7 +155,7 @@ int main(int argc, char* argv[])
     int sec = end.tv_sec - start.tv_sec;
     int usec = end.tv_usec - start.tv_usec;
     int t_gpu = sec * 1000 + (usec / 1000);
-    printf("GPU time (ms): %d\n", t_gpu);
+    printf(ANSI_COLOR_RED "GPU time (ms): %d " ANSI_COLOR_RESET "\n", t_gpu);
     
     /*-------------- Finalize ------------*/
     // Copy memory from GPU to host
