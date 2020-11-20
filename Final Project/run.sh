@@ -59,16 +59,17 @@ else
             if [ $yn -eq 2 ];
             then
                 read -p "Test thread in 4 16 64 256 1024 vs time? 1 no 2 yes " yn
+                read -p "Thread configuration in 2D ? 0 no 1 yes" dim
                 if [ $yn -eq 1 ];
                 then
-                    time ./gb_cuda_stm.o $1
+                    time ./gb_cuda_stm.o $1 1024 $dim
                 else
                     for i in 4 16 64 256 1024;
                     do
                         printf "\nGaussian Blur without stream pipline "
-                        time ./gb_cuda.o $1 $i
+                        time ./gb_cuda.o $1 $i $dim
                         printf "\nGaussian Blur with stream pipline "
-                        time ./gb_cuda_stm.o $1 $i
+                        time ./gb_cuda_stm.o $1 $i $dim
                     done
                 fi
             fi
